@@ -1,29 +1,37 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taqwa Property BD - Management System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Taqwa Property BD - Management System</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Font Awesome (CDN) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 </head>
 <body>
-    <div class="app-container">
-        <header>
-            <div class="logo">
-                <i class="fa-solid fa-building-user"></i> Taqwa Property BD
-            </div>
-            <div id="userInfo" class="user-info" style="display: none;">
-                <span id="userName">User</span>
-                <button onclick="logout()" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
-            </div>
-        </header>
+  <div class="app-container">
+    <header>
+      <div class="logo">
+        <i class="fa-solid fa-building-user"></i> Taqwa Property BD
+      </div>
+      <div id="userInfo" class="user-info" style="display: none;">
+        <span id="userName">User</span>
+        <button onclick="logout()" class="logout-btn" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </header>
 
-        <main id="app">
-            <!-- Dynamic Content Loaded Here -->
-        </main>
-    </div>
+    <main id="app">
+      <!-- Dynamic content rendered by the JS module -->
+    </main>
+  </div>
 
-    <script src="script.js"></script>
+  <!-- App script: load the consolidated module once -->
+  <!-- Make sure the filename matches the JS file you use (e.g. app.js). -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>

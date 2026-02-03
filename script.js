@@ -1,1010 +1,891 @@
 /**
- * Taqwa Property BD - Application Logic
- * Simulates backend operations with localStorage for full functionality in simple mode
+ * Taqwa Property BD - Consolidated Frontend (LocalStorage + Optional Firebase)
+ * - Single file, deduplicated UI and backends
+ * - Toggle backend via USE_FIREBASE flag
+ *
+ * Usage:
+ * - By default the app runs in demo/local mode (no network).
+ * - To enable Firebase set USE_FIREBASE = true and provide firebaseConfig (below).
+ * - When USE_FIREBASE = true the Firebase SDKs are loaded dynamically.
+ *
+ * Notes:
+ * - This file is intended to be loaded as a module in the browser:
+ *     <script type="module" src="app.js"></script>
+ *
+ * Author: Consolidated fresh version (generated)
  */
 
+const USE_FIREBASE = false; // set true to use Firebase backend (ensure firebaseConfig filled)
+const FIREBASE_SDK_VERSION = '10.7.1'; // change as needed
+
+// If enabling Firebase, fill with your project's config
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  databaseURL: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: "",
+  measurementId: ""
+};
+
+// -----------------------------
+// DOM references (single set)
+// -----------------------------
 const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-// --- MOCK DATABASE & BACKEND ---
-// Initializes dummy data if not present
-class Backend {
-    constructor() {
-        this.initData();
+// -----------------------------
+// Backend: LocalStorage (Demo)
+// -----------------------------
+class BackendLocal {
+  constructor() {
+    this.initData();
+  }
+
+  initData() {
+    if (!localStorage.getItem('taqwa_members')) {
+      const initialMembers = [
+        { memberId: '100', name: 'Admin User', mobile: '01700000000', password: '123', role: 'Admin', monthlyFee: 0, joinDate: '2023-01-01' },
+        { memberId: '101', name: 'Abdul Karim', mobile: '01711111111', password: '123', role: 'Member', monthlyFee: 5000, joinDate: '2023-05-15' },
+        { memberId: '102', name: 'Rahim Uddin', mobile: '01822222222', password: '123', role: 'Member', monthlyFee: 10000, joinDate: '2023-06-20' }
+      ];
+      localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
     }
 
-    initData() {
-        if (!localStorage.getItem('taqwa_members')) {
-            const initialMembers = [
-                { 
-                    memberId: '100', 
-                    name: 'Admin User', 
-                    mobile: '01700000000', 
-                    password: '123', 
-                    role: 'Admin', 
-                    monthlyFee: 0, 
-                    joinDate: '2023-01-01' 
-                },
-                { 
-                    memberId: '101', 
-                    name: 'Abdul Karim', 
-                    mobile: '01711111111', 
-                    password: '123', 
-                    role: 'Member', 
-                    monthlyFee: 5000, 
-                    joinDate: '2023-05-15' 
-                },
-                { 
-                    memberId: '102', 
-                    name: 'Rahim Uddin', 
-                    mobile: '01822222222', 
-                    password: '123', 
-                    role: 'Member', 
-                    monthlyFee: 10000, 
-                    joinDate: '2023-06-20' 
-                }
-            ];
-            localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
+    if (!localStorage.getItem('taqwa_collections')) {
+      const initialCollections = [
+        { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
+        { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
+        { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
+      ];
+      localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
+    }
+
+    if (!localStorage.getItem('taqwa_investments')) {
+      const initialInvestments = [{ id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }];
+      localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
+    }
+
+    if (!localStorage.getItem('taqwa_funds')) {
+      localStorage.setItem('taqwa_funds', JSON.stringify({ englishFund: 25000 }));
+    }
+
+    if (!localStorage.getItem('taqwa_notifications')) {
+      localStorage.setItem('taqwa_notifications', JSON.stringify([]));
+    }
+  }
+
+  delay(ms = 200) { return new Promise(r => setTimeout(r, ms)); }
+
+  getMembers() { return JSON.parse(localStorage.getItem('taqwa_members') || '[]'); }
+  getCollections() { return JSON.parse(localStorage.getItem('taqwa_collections') || '[]'); }
+  getInvestments() { return JSON.parse(localStorage.getItem('taqwa_investments') || '[]'); }
+  getFunds() { return JSON.parse(localStorage.getItem('taqwa_funds') || '{"englishFund":0}'); }
+  getNotifications() { return JSON.parse(localStorage.getItem('taqwa_notifications') || '[]'); }
+
+  async login(memberId, mobile) {
+    await this.delay();
+    const members = this.getMembers();
+    // allow demo admin if DB empty or explicit
+    const user = members.find(m => m.memberId === memberId && m.mobile === mobile);
+    if (user) return { status: 'success', ...user };
+    throw new Error('Invalid Member ID or Mobile');
+  }
+
+  async getDashboardData() {
+    await this.delay();
+    const members = this.getMembers().filter(m => m.role !== 'Admin');
+    const collections = this.getCollections().filter(c => c.status === 'Approved');
+    const investments = this.getInvestments();
+    const funds = this.getFunds();
+
+    const totalDeposit = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
+    const totalInvested = investments.reduce((s, i) => s + parseInt(i.amount || 0), 0);
+    const englishFund = parseInt(funds.englishFund || 0);
+    const availableBalance = (totalDeposit + englishFund) - totalInvested;
+
+    const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
+    const thisMonthDeposit = collections.filter(c => c.month === currentMonth).reduce((s, c) => s + parseInt(c.amount || 0), 0);
+
+    return { totalMembers: members.length, totalDeposit, totalInvested, englishFund, availableBalance, thisMonthDeposit };
+  }
+
+  async saveCollection(collectionData) {
+    await this.delay();
+    const members = this.getMembers();
+    const member = members.find(m => m.memberId === collectionData.memberId);
+    if (!member && collectionData.memberId !== '100') throw new Error('Member ID not found');
+
+    const collections = this.getCollections();
+    const newCollection = {
+      id: Date.now(),
+      memberName: member ? member.name : 'Admin',
+      date: new Date().toISOString().split('T')[0],
+      status: collectionData.status || 'Approved',
+      ...collectionData
+    };
+    collections.push(newCollection);
+    localStorage.setItem('taqwa_collections', JSON.stringify(collections));
+    return { success: true, collection: newCollection };
+  }
+
+  async addMember(memberData) {
+    await this.delay();
+    const members = this.getMembers();
+    if (members.find(m => m.memberId === memberData.memberId)) throw new Error('Member ID already exists');
+    members.push(memberData);
+    localStorage.setItem('taqwa_members', JSON.stringify(members));
+    return { success: true };
+  }
+
+  async saveInvestment(title, amount) {
+    await this.delay();
+    const investments = this.getInvestments();
+    investments.push({ id: Date.now(), title, amount: parseInt(amount), date: new Date().toISOString().split('T')[0] });
+    localStorage.setItem('taqwa_investments', JSON.stringify(investments));
+    return { success: true };
+  }
+
+  async updateEnglishFund(amount) {
+    await this.delay();
+    const funds = this.getFunds();
+    funds.englishFund = parseInt(amount);
+    localStorage.setItem('taqwa_funds', JSON.stringify(funds));
+    return { success: true };
+  }
+
+  async sendNotification(message) {
+    await this.delay();
+    const notifications = this.getNotifications();
+    notifications.push({ id: Date.now(), message, date: new Date().toLocaleString() });
+    localStorage.setItem('taqwa_notifications', JSON.stringify(notifications));
+    return { success: true };
+  }
+
+  async getMemberDue(memberId) {
+    await this.delay();
+    const members = this.getMembers();
+    const member = members.find(m => m.memberId === memberId);
+    if (!member) throw new Error('Member not found');
+    const collections = this.getCollections().filter(c => c.memberId === memberId && c.status === 'Approved');
+    const totalPaid = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
+    const joinDate = new Date(member.joinDate);
+    const now = new Date();
+    const monthsJoined = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth()) + 1;
+    const totalExpected = monthsJoined * (member.monthlyFee || 0);
+    return { paid: totalPaid, due: Math.max(0, totalExpected - totalPaid) };
+  }
+
+  async getCollectionById(id) {
+    await this.delay();
+    return this.getCollections().find(c => c.id === parseInt(id));
+  }
+
+  async getMemberCollections(memberId) {
+    await this.delay();
+    return this.getCollections().filter(c => c.memberId === memberId);
+  }
+
+  async getAllMembers() {
+    await this.delay();
+    return this.getMembers();
+  }
+
+  async getMemberProfile(memberId) {
+    await this.delay();
+    const member = this.getMembers().find(m => m.memberId === memberId);
+    if (!member) return null;
+    const dueData = await this.getMemberDue(memberId);
+    return { ...member, totalPaid: dueData.paid, totalDue: dueData.due };
+  }
+}
+
+// -----------------------------
+// Backend: Firebase (Optional)
+// -----------------------------
+class BackendFirebase {
+  constructor(db) {
+    this.db = db;
+    this.ref = dbRef => dbRef; // placeholder - we'll use functions directly from imported modules
+  }
+
+  // The instance will be created with required firebase helpers injected in initFirebase()
+  static async create(firebaseModules, config) {
+    const { initializeApp } = firebaseModules.app;
+    const { getDatabase, ref, set, get, push } = firebaseModules.database;
+
+    const appInstance = initializeApp(config);
+    const db = getDatabase(appInstance);
+
+    // Return an object exposing the same methods as BackendLocal
+    return {
+      async getMembers() {
+        const snap = await get(ref(db, 'members'));
+        return snap.exists() ? Object.values(snap.val()) : [];
+      },
+
+      async getCollections() {
+        const snap = await get(ref(db, 'collections'));
+        return snap.exists() ? Object.values(snap.val()) : [];
+      },
+
+      async getInvestments() {
+        const snap = await get(ref(db, 'investments'));
+        return snap.exists() ? Object.values(snap.val()) : [];
+      },
+
+      async getFunds() {
+        const snap = await get(ref(db, 'funds'));
+        return snap.exists() ? snap.val() : { englishFund: 0 };
+      },
+
+      async getNotifications() {
+        const snap = await get(ref(db, 'notifications'));
+        return snap.exists() ? Object.values(snap.val()) : [];
+      },
+
+      async login(memberId, mobile) {
+        if (memberId === '100' && mobile === '01700000000') {
+          return { memberId: '100', name: 'Admin User', role: 'Admin' };
         }
-
-        if (!localStorage.getItem('taqwa_collections')) {
-            const initialCollections = [
-                { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
-                { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
-                { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
-            ];
-            localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
-        }
-
-        if (!localStorage.getItem('taqwa_investments')) {
-            const initialInvestments = [
-                { id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }
-            ];
-            localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
-        }
-
-        if (!localStorage.getItem('taqwa_funds')) {
-            const initialFunds = {
-                englishFund: 25000
-            };
-            localStorage.setItem('taqwa_funds', JSON.stringify(initialFunds));
-        }
-
-        if (!localStorage.getItem('taqwa_notifications')) {
-            localStorage.setItem('taqwa_notifications', JSON.stringify([]));
-        }
-    }
-
-    // Simulate API delay
-    async delay(ms = 300) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
-
-    getMembers() {
-        return JSON.parse(localStorage.getItem('taqwa_members') || '[]');
-    }
-
-    getCollections() {
-        return JSON.parse(localStorage.getItem('taqwa_collections') || '[]');
-    }
-
-    getInvestments() {
-        return JSON.parse(localStorage.getItem('taqwa_investments') || '[]');
-    }
-
-    getFunds() {
-        return JSON.parse(localStorage.getItem('taqwa_funds') || '{"englishFund": 0}');
-    }
-
-    getNotifications() {
-        return JSON.parse(localStorage.getItem('taqwa_notifications') || '[]');
-    }
-
-    async login(memberId, mobile) {
-        await this.delay();
-        const members = this.getMembers();
+        const members = await this.getMembers();
         const user = members.find(m => m.memberId === memberId && m.mobile === mobile);
-        
-        if (user) {
-            return { status: 'success', ...user };
-        } else {
-            throw new Error('Invalid Member ID or Mobile');
-        }
-    }
+        if (user) return { status: 'success', ...user };
+        throw new Error('Invalid Member ID or Mobile');
+      },
 
-    async getDashboardData() {
-        await this.delay();
-        const members = this.getMembers().filter(m => m.role !== 'Admin');
-        const collections = this.getCollections().filter(c => c.status === 'Approved');
-        const investments = this.getInvestments();
-        const funds = this.getFunds();
-        
-        const totalDeposit = collections.reduce((sum, c) => sum + parseInt(c.amount), 0);
-        const totalInvested = investments.reduce((sum, i) => sum + parseInt(i.amount), 0);
+      async getDashboardData() {
+        const membersList = await this.getMembers();
+        const members = membersList.filter(m => m.role !== 'Admin');
+        const collectionsList = await this.getCollections();
+        const collections = collectionsList.filter(c => c.status === 'Approved');
+        const investments = await this.getInvestments();
+        const funds = await this.getFunds();
+
+        const totalDeposit = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
+        const totalInvested = investments.reduce((s, i) => s + parseInt(i.amount || 0), 0);
         const englishFund = parseInt(funds.englishFund || 0);
         const availableBalance = (totalDeposit + englishFund) - totalInvested;
-        
-        const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-        const thisMonthDeposit = collections
-            .filter(c => c.month === currentMonth)
-            .reduce((sum, c) => sum + parseInt(c.amount), 0);
 
-        return {
-            totalMembers: members.length,
-            totalDeposit: totalDeposit,
-            totalInvested: totalInvested,
-            englishFund: englishFund,
-            availableBalance: availableBalance,
-            thisMonthDeposit: thisMonthDeposit
-        };
-    }
+        return { totalMembers: members.length, totalDeposit, totalInvested, englishFund, availableBalance };
+      },
 
-    async saveCollection(collectionData) {
-        await this.delay();
-        const members = this.getMembers();
+      async saveCollection(collectionData) {
+        const members = await this.getMembers();
         const member = members.find(m => m.memberId === collectionData.memberId);
-        
-        if (!member) throw new Error('Member ID not found');
+        if (!member && collectionData.memberId !== '100') throw new Error('Member ID not found');
 
-        const collections = this.getCollections();
+        const newColRef = push(ref(db, 'collections'));
         const newCollection = {
-            id: Date.now(),
-            memberName: member.name,
-            date: new Date().toISOString().split('T')[0],
-            status: collectionData.status || 'Approved',
-            ...collectionData
+          id: Date.now(),
+          memberName: member ? member.name : 'Admin',
+          date: new Date().toISOString().split('T')[0],
+          status: collectionData.status || 'Approved',
+          ...collectionData
         };
-        
-        collections.push(newCollection);
-        localStorage.setItem('taqwa_collections', JSON.stringify(collections));
+        await set(newColRef, newCollection);
         return { success: true, collection: newCollection };
-    }
+      },
 
-    async addMember(memberData) {
-        await this.delay();
-        const members = this.getMembers();
-        if (members.find(m => m.memberId === memberData.memberId)) {
-            throw new Error('Member ID already exists');
-        }
-        members.push(memberData);
-        localStorage.setItem('taqwa_members', JSON.stringify(members));
+      async addMember(memberData) {
+        const members = await this.getMembers();
+        if (members.find(m => m.memberId === memberData.memberId)) throw new Error('Member ID already exists');
+        await set(ref(db, `members/${memberData.memberId}`), memberData);
         return { success: true };
-    }
+      },
 
-    async saveInvestment(title, amount) {
-        await this.delay();
-        const investments = this.getInvestments();
-        const newInvestment = {
-            id: Date.now(),
-            title,
-            amount,
-            date: new Date().toISOString().split('T')[0]
-        };
-        investments.push(newInvestment);
-        localStorage.setItem('taqwa_investments', JSON.stringify(investments));
+      async saveInvestment(title, amount) {
+        const newInvRef = push(ref(db, 'investments'));
+        await set(newInvRef, { id: Date.now(), title, amount: parseInt(amount), date: new Date().toISOString().split('T')[0] });
         return { success: true };
-    }
+      },
 
-    async updateEnglishFund(amount) {
-        await this.delay();
-        const funds = this.getFunds();
-        funds.englishFund = parseInt(amount);
-        localStorage.setItem('taqwa_funds', JSON.stringify(funds));
+      async updateEnglishFund(amount) {
+        await set(ref(db, 'funds/englishFund'), parseInt(amount));
         return { success: true };
-    }
+      },
 
-    async sendNotification(message) {
-        await this.delay();
-        const notifications = this.getNotifications();
-        notifications.push({
-            id: Date.now(),
-            message,
-            date: new Date().toLocaleString()
-        });
-        localStorage.setItem('taqwa_notifications', JSON.stringify(notifications));
+      async sendNotification(message) {
+        const newNotifRef = push(ref(db, 'notifications'));
+        await set(newNotifRef, { id: Date.now(), message, date: new Date().toLocaleString() });
         return { success: true };
-    }
+      },
 
-    async getMemberDue(memberId) {
-        await this.delay();
-        const members = this.getMembers();
+      async getMemberDue(memberId) {
+        const members = await this.getMembers();
         const member = members.find(m => m.memberId === memberId);
-        if (!member) throw new Error('Member not found');
+        if (!member) return { paid: 0, due: 0 };
+        const collections = (await this.getCollections()).filter(c => c.memberId === memberId && c.status === 'Approved');
+        const totalPaid = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
 
-        const collections = this.getCollections().filter(c => c.memberId === memberId);
-        const totalPaid = collections.reduce((sum, c) => sum + parseInt(c.amount), 0);
-        
-        // Simple due calculation: (Months joined * Fee) - Paid
-        // This is a simplified logic for the demo
         const joinDate = new Date(member.joinDate);
         const now = new Date();
         const monthsJoined = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth()) + 1;
-        const totalExpected = monthsJoined * member.monthlyFee;
-        
-        return {
-            paid: totalPaid,
-            due: Math.max(0, totalExpected - totalPaid)
-        };
-    }
+        const totalExpected = monthsJoined * (member.monthlyFee || 0);
 
-    async getCollectionById(id) {
-        await this.delay();
-        const collections = this.getCollections();
-        return collections.find(c => c.id === parseInt(id));
-    }
+        return { paid: totalPaid, due: Math.max(0, totalExpected - totalPaid) };
+      },
 
-    async getMemberCollections(memberId) {
-        await this.delay();
-        return this.getCollections().filter(c => c.memberId === memberId);
-    }
+      async getCollectionById(id) {
+        const cols = await this.getCollections();
+        return cols.find(c => c.id === parseInt(id));
+      },
 
-    async getAllMembers() {
-        await this.delay();
-        return this.getMembers();
-    }
+      async getMemberCollections(memberId) {
+        return (await this.getCollections()).filter(c => c.memberId === memberId);
+      },
 
-    async getMemberProfile(memberId) {
-        await this.delay();
-        const member = this.getMembers().find(m => m.memberId === memberId);
+      async getAllMembers() {
+        return await this.getMembers();
+      },
+
+      async getMemberProfile(memberId) {
+        const members = await this.getMembers();
+        const member = members.find(m => m.memberId === memberId);
         if (!member) return null;
-
         const dueData = await this.getMemberDue(memberId);
-        return {
-            ...member,
-            totalPaid: dueData.paid,
-            totalDue: dueData.due
-        };
-    }
+        return { ...member, totalPaid: dueData.paid, totalDue: dueData.due };
+      }
+    };
+  }
 }
 
-const backend = new Backend();
-
-// --- FRONTEND LOGIC ---
-
-// State
+// -----------------------------
+// App initialization (choose backend)
+// -----------------------------
+let backend = null;
 let currentUser = null;
-let activeTab = 'dashboard';
 
+async function initBackend() {
+  if (!USE_FIREBASE) {
+    backend = new BackendLocal();
+    return;
+  }
+
+  // dynamic import of firebase modules
+  try {
+    const appModuleUrl = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-app.js`;
+    const dbModuleUrl = `https://www.gstatic.com/firebasejs/${FIREBASE_SDK_VERSION}/firebase-database.js`;
+
+    const appModule = await import(appModuleUrl);
+    const dbModule = await import(dbModuleUrl);
+
+    // create BackendFirebase facade
+    backend = await BackendFirebase.create({ app: appModule, database: dbModule }, firebaseConfig);
+  } catch (err) {
+    console.error("Failed to initialize Firebase:", err);
+    // fallback to local
+    backend = new BackendLocal();
+  }
+}
+
+// -----------------------------
+// UI: Helpers & Renderers
+// -----------------------------
 function switchTab(tabId) {
-    activeTab = tabId;
-    const tabs = document.querySelectorAll('.tab-content');
-    const btns = document.querySelectorAll('.tab-btn');
-    
-    tabs.forEach(tab => tab.classList.remove('active'));
-    btns.forEach(btn => btn.classList.remove('active'));
-    
-    document.getElementById(tabId).classList.add('active');
-    document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const tab = document.getElementById(tabId);
+  if (tab) tab.classList.add('active');
+  const btn = document.querySelector(`[data-tab="${tabId}"]`);
+  if (btn) btn.classList.add('active');
 }
 
-// Render Functions
+function formatCurrency(n = 0) {
+  return Number(n).toLocaleString();
+}
+
+// LOGIN screen
 function renderLogin() {
-    userInfo.style.display = 'none';
-    app.innerHTML = `
-    <div class="card" style="max-width: 400px; margin: 40px auto; border-top: 5px solid var(--primary);">
-        <div class="text-center">
-             <div style="background: #e8f5e9; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
-                <i class="fa-solid fa-shield-halved fa-2x" style="color: var(--primary);"></i>
-             </div>
-             <h3 style="margin-bottom: 10px;">Member Portal</h3>
-             <p style="color: #666; font-size: 0.85rem; margin-bottom: 25px;">
-                Taqwa Property BD Management System
-             </p>
-        </div>
-        <div class="form-group">
-            <label><i class="fa-solid fa-id-card"></i> Member ID</label>
-            <input id="mid" placeholder="Enter your ID" type="text">
-        </div>
-        <div class="form-group">
-            <label><i class="fa-solid fa-phone"></i> Mobile Number</label>
-            <input id="mob" placeholder="Enter mobile number" type="tel">
-        </div>
-        <button onclick="login()"><i class="fa-solid fa-right-to-bracket"></i> Login Securely</button>
-        <div id="msg" class="error"></div>
-        
-        <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #888;" class="text-center">
-            <p>Demo Admin: 100 / 01700000000</p>
-            <p>Demo Member: 101 / 01711111111</p>
-        </div>
-    </div>`;
-}
+  if (userInfo) userInfo.style.display = 'none';
+  app.innerHTML = `
+    <div class="card" style="max-width:420px;margin:40px auto;border-top:5px solid var(--primary);">
+      <div class="text-center">
+        <h3>Member Portal</h3>
+        <p style="color:#666;font-size:.9rem;">Taqwa Property BD Management</p>
+      </div>
+      <div class="form-group">
+        <label>Member ID</label>
+        <input id="mid" placeholder="Enter ID" type="text">
+      </div>
+      <div class="form-group">
+        <label>Mobile Number</label>
+        <input id="mob" placeholder="Enter mobile" type="tel">
+      </div>
+      <button id="loginBtn">Login</button>
+      <div id="msg" class="error" style="display:none;color:red;margin-top:10px;"></div>
+      <div style="margin-top:18px;font-size:.85rem;color:#888;">
+        <p>Demo Admin: 100 / 01700000000</p>
+        <p>Demo Member: 101 / 01711111111</p>
+      </div>
+    </div>
+  `;
 
-async function login() {
+  document.getElementById('loginBtn').addEventListener('click', async () => {
     const midVal = document.getElementById("mid").value.trim();
     const mobVal = document.getElementById("mob").value.trim();
     const msgEl = document.getElementById("msg");
-
-    if (!midVal || !mobVal) {
-        msgEl.innerText = "Please fill in all fields";
-        msgEl.style.display = "block";
-        return;
-    }
-
+    msgEl.style.display = 'none';
     try {
-        const user = await backend.login(midVal, mobVal);
-        currentUser = user;
-        
-        // Update Header
-        userNameSpan.innerText = user.name;
-        userInfo.style.display = 'flex';
-
-        if (user.role === "Admin") {
-            await renderAdmin();
-        } else {
-            await renderMember(user.memberId);
-        }
+      const user = await backend.login(midVal, mobVal);
+      currentUser = user;
+      if (userNameSpan) userNameSpan.innerText = user.name;
+      if (userInfo) userInfo.style.display = 'flex';
+      if (user.role === 'Admin') {
+        await renderAdmin();
+      } else {
+        await renderMember(user.memberId);
+      }
     } catch (err) {
-        msgEl.innerText = err.message;
-        msgEl.style.display = "block";
+      msgEl.innerText = err.message || 'Login failed';
+      msgEl.style.display = 'block';
     }
+  });
 }
 
+// LOGOUT
 function logout() {
-    currentUser = null;
-    renderLogin();
+  currentUser = null;
+  if (userInfo) userInfo.style.display = 'none';
+  renderLogin();
 }
 
-// --- ADMIN VIEWS ---
-
+// Admin view
 async function renderAdmin() {
-    const data = await backend.getDashboardData();
-    
-    app.innerHTML = `
+  const data = await backend.getDashboardData();
+  app.innerHTML = `
     <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
-        <button class="tab-btn" onclick="switchTab('collections')"><i class="fa-solid fa-money-bill-transfer"></i> Collections</button>
-        <button class="tab-btn" onclick="switchTab('members')"><i class="fa-solid fa-users"></i> Members</button>
-        <button class="tab-btn" onclick="switchTab('investments')"><i class="fa-solid fa-hand-holding-dollar"></i> Investments</button>
-        <button class="tab-btn" onclick="switchTab('notifications')"><i class="fa-solid fa-bell"></i> Alerts</button>
+      <button class="tab-btn active" data-tab="dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+      <button class="tab-btn" data-tab="collections" onclick="switchTab('collections')">Collections</button>
+      <button class="tab-btn" data-tab="members" onclick="switchTab('members')">Members</button>
+      <button class="tab-btn" data-tab="investments" onclick="switchTab('investments')">Investments</button>
+      <button class="tab-btn" data-tab="notifications" onclick="switchTab('notifications')">Alerts</button>
     </div>
 
-    <!-- Dashboard Tab -->
     <div id="dashboard" class="tab-content active">
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value">${data.totalMembers}</div>
-                <div class="stat-label">Total Members</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value">Tk. ${data.totalDeposit.toLocaleString()}</div>
-                <div class="stat-label">Total Deposits</div>
-            </div>
-            <div class="stat-item invested">
-                <div class="stat-value">Tk. ${data.totalInvested.toLocaleString()}</div>
-                <div class="stat-label">Total Invested</div>
-            </div>
-            <div class="stat-item fund">
-                <div class="stat-value">Tk. ${data.englishFund.toLocaleString()}</div>
-                <div class="stat-label">English Fund</div>
-            </div>
-            <div class="stat-item balance">
-                <div class="stat-value">Tk. ${data.availableBalance.toLocaleString()}</div>
-                <div class="stat-label">Available Cash</div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-gears"></i> Quick Actions</h3>
-            </div>
-            <div class="receipt-actions">
-                <button onclick="exportMembers()" class="btn-secondary"><i class="fa-solid fa-file-csv"></i> Export Members</button>
-                <button onclick="exportCollections()" class="btn-secondary"><i class="fa-solid fa-file-export"></i> Export Collections</button>
-            </div>
-        </div>
+      <div class="stats-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px;">
+        <div class="card"><h4>Total Members</h4><p>${data.totalMembers}</p></div>
+        <div class="card"><h4>Total Deposits</h4><p>Tk. ${formatCurrency(data.totalDeposit)}</p></div>
+        <div class="card"><h4>Available Cash</h4><p>Tk. ${formatCurrency(data.availableBalance)}</p></div>
+      </div>
+      <div class="card">
+        <h4>Quick Actions</h4>
+        <button id="expMembers" class="btn-secondary">Export Members</button>
+        <button id="expCols" class="btn-secondary">Export Collections</button>
+      </div>
     </div>
 
-    <!-- Collections Tab -->
     <div id="collections" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-plus-circle"></i> Add Collection</h3>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Member ID</label>
-                    <input id="cmid" placeholder="e.g. 101" oninput="lookupMemberName(this.value, 'cmName')">
-                    <div id="cmName" style="font-size: 0.8rem; color: var(--primary); font-weight: 600; margin-top: 5px;"></div>
-                </div>
-                <div class="form-group">
-                    <label>Month</label>
-                    <input id="month" value="${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Deposit Type</label>
-                    <select id="depType">
-                        <option value="Monthly Fee">Monthly Fee</option>
-                        <option value="English Fund">English Fund</option>
-                        <option value="Investment">Investment</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Amount (Tk)</label>
-                    <input id="amt" type="number" value="5000">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Payment Gateway</label>
-                    <select id="gateway" onchange="toggleBankField(this.value, 'bankGroup')">
-                        <option value="Bkash">Bkash</option>
-                        <option value="Nagad">Nagad</option>
-                        <option value="Rocket">Rocket</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Cash">Cash</option>
-                    </select>
-                </div>
-                <div class="form-group" id="bankGroup" style="display: none;">
-                    <label>Bank Name</label>
-                    <input id="bankName" placeholder="Enter bank name">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Transaction ID</label>
-                    <input id="trxId" placeholder="Enter TRX ID">
-                </div>
-                <div class="form-group">
-                    <label>Deposit Slip (Photo)</label>
-                    <input id="slipPhoto" type="file" accept="image/*">
-                </div>
-            </div>
-            <button onclick="saveCollection()"><i class="fa-solid fa-check-double"></i> Record Collection</button>
-            <div id="amsg" class="success"></div>
-            <div id="aerr" class="error"></div>
+      <div class="card">
+        <h3>Add Collection</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <input id="cmid" placeholder="Member ID" oninput="lookupMemberName(this.value,'cmName')">
+          <input id="month" value="${new Date().toLocaleString('default',{month:'long',year:'numeric'})}">
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;">
+          <select id="depType"><option>Monthly Fee</option><option>English Fund</option><option>Investment</option><option>Others</option></select>
+          <input id="amt" type="number" value="5000" placeholder="Amount">
+        </div>
+        <div style="margin-top:10px;">
+          <select id="gateway" onchange="toggleBankField(this.value,'bankGroup')">
+            <option>Bkash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option><option>Cash</option>
+          </select>
+          <div id="bankGroup" style="display:none;margin-top:8px;"><input id="bankName" placeholder="Bank name"></div>
+        </div>
+        <div style="margin-top:10px;">
+          <input id="trxId" placeholder="Transaction ID">
+          <input id="slipPhoto" type="file" accept="image/*">
+        </div>
+        <button id="saveColBtn" style="margin-top:10px;">Record Collection</button>
+        <div id="amsg" class="success" style="display:none;margin-top:8px;"></div>
+        <div id="aerr" class="error" style="display:none;margin-top:8px;"></div>
+      </div>
     </div>
 
-    <!-- Members Tab -->
     <div id="members" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-user-plus"></i> Register New Member</h3>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Member ID</label>
-                    <input id="newMid" placeholder="e.g. 103">
-                </div>
-                <div class="form-group">
-                    <label>Full Name</label>
-                    <input id="newName" placeholder="Enter name">
-                </div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Mobile Number</label>
-                    <input id="newMob" placeholder="017...">
-                </div>
-                <div class="form-group">
-                    <label>Monthly Fee (Tk)</label>
-                    <input id="newFee" type="number" value="5000">
-                </div>
-            </div>
-            <button onclick="addNewMember()"><i class="fa-solid fa-user-check"></i> Add Member</button>
+      <div class="card">
+        <h3>Register New Member</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <input id="newMid" placeholder="Member ID">
+          <input id="newName" placeholder="Full name">
+          <input id="newMob" placeholder="Mobile">
+          <input id="newFee" type="number" value="5000" placeholder="Monthly Fee">
         </div>
+        <button id="addMemberBtn" style="margin-top:10px;">Add Member</button>
+      </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-users"></i> Member Directory</h3>
-            </div>
-            <div class="table-container" id="memberList">Loading...</div>
-        </div>
+      <div class="card" style="margin-top:12px;">
+        <h3>Member Directory</h3>
+        <div id="memberList">Loading...</div>
+      </div>
     </div>
 
-    <!-- Investments Tab -->
     <div id="investments" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-landmark"></i> Manage Funds</h3>
-            </div>
-            <div class="form-group">
-                <label>English Fund Amount (Tk)</label>
-                <input id="engFund" type="number" value="${data.englishFund}">
-            </div>
-            <button onclick="updateFund()"><i class="fa-solid fa-save"></i> Update English Fund</button>
-        </div>
+      <div class="card">
+        <h3>Manage Funds</h3>
+        <input id="engFund" type="number" value="${data.englishFund}">
+        <button id="updateFundBtn" style="margin-top:8px;">Update English Fund</button>
+      </div>
 
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-money-bill-trend-up"></i> Record Investment</h3>
-            </div>
-            <div class="form-group">
-                <label>Investment Title</label>
-                <input id="invTitle" placeholder="e.g. Land Purchase - Sector 10">
-            </div>
-            <div class="form-group">
-                <label>Amount (Tk)</label>
-                <input id="invAmt" type="number">
-            </div>
-            <button onclick="saveInvestment()"><i class="fa-solid fa-file-invoice-dollar"></i> Save Investment</button>
-        </div>
+      <div class="card" style="margin-top:12px;">
+        <h3>Record Investment</h3>
+        <input id="invTitle" placeholder="Investment Title">
+        <input id="invAmt" type="number" placeholder="Amount">
+        <button id="saveInvBtn" style="margin-top:8px;">Save Investment</button>
+      </div>
     </div>
 
-    <!-- Notifications Tab -->
     <div id="notifications" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-bullhorn"></i> Send Notification</h3>
-            </div>
-            <div class="form-group">
-                <label>Message to all members</label>
-                <textarea id="notifMsg" rows="3" placeholder="Enter message here..."></textarea>
-            </div>
-            <button onclick="sendNotification()"><i class="fa-solid fa-paper-plane"></i> Broadcast Message</button>
-        </div>
+      <div class="card">
+        <h3>Send Notification</h3>
+        <textarea id="notifMsg" rows="3" placeholder="Enter message..."></textarea>
+        <button id="sendNotifBtn" style="margin-top:8px;">Broadcast Message</button>
+      </div>
     </div>
-    `;
-    loadMemberList();
+  `;
+
+  // Attach handlers
+  document.getElementById('expMembers').addEventListener('click', exportMembers);
+  document.getElementById('expCols').addEventListener('click', exportCollections);
+  document.getElementById('saveColBtn').addEventListener('click', saveCollection);
+  document.getElementById('addMemberBtn').addEventListener('click', addNewMember);
+  document.getElementById('updateFundBtn').addEventListener('click', updateFund);
+  document.getElementById('saveInvBtn').addEventListener('click', saveInvestment);
+  document.getElementById('sendNotifBtn').addEventListener('click', sendNotification);
+
+  loadMemberList();
 }
 
+// Member view
+async function renderMember(memberId) {
+  const m = await backend.getMemberProfile(memberId);
+  const d = await backend.getMemberDue(memberId);
+  const notifications = await backend.getNotifications();
+
+  app.innerHTML = `
+    <div class="tabs-container">
+      <button class="tab-btn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+      <button class="tab-btn" data-tab="payments" onclick="switchTab('payments')">Payments</button>
+      <button class="tab-btn" data-tab="deposit" onclick="switchTab('deposit')">Submit Deposit</button>
+      <button class="tab-btn" data-tab="alerts" onclick="switchTab('alerts')">Notifications (${notifications.length})</button>
+    </div>
+
+    <div id="overview" class="tab-content active">
+      <div class="card">
+        <h3>My Profile</h3>
+        <p><b>Name:</b> ${m.name}</p>
+        <p><b>Member ID:</b> ${m.memberId}</p>
+        <p><b>Mobile:</b> ${m.mobile}</p>
+        <p><b>Monthly Fee:</b> Tk. ${formatCurrency(m.monthlyFee)}</p>
+      </div>
+
+      <div class="stats-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <div class="card"><h4>Total Paid</h4><p>Tk. ${formatCurrency(d.paid)}</p></div>
+        <div class="card"><h4>Total Due</h4><p>Tk. ${formatCurrency(d.due)}</p></div>
+      </div>
+    </div>
+
+    <div id="payments" class="tab-content">
+      <div class="card">
+        <h3>Payment History</h3>
+        <div id="hist">Loading history...</div>
+      </div>
+    </div>
+
+    <div id="deposit" class="tab-content">
+      <div class="card">
+        <h3>Submit Monthly Deposit</h3>
+        <input id="depMonth" value="${new Date().toLocaleString('default',{month:'long',year:'numeric'})}">
+        <input id="depAmt" type="number" value="${m.monthlyFee}">
+        <select id="depGateway" onchange="toggleBankField(this.value,'depBankGroup')">
+          <option>Bkash</option><option>Nagad</option><option>Rocket</option><option>Bank Transfer</option><option>Cash</option>
+        </select>
+        <div id="depBankGroup" style="display:none;margin-top:6px;"><input id="depBankName" placeholder="Bank name"></div>
+        <input id="depTrxId" placeholder="TRX ID">
+        <textarea id="depNote" rows="2" placeholder="Note (optional)"></textarea>
+        <button id="submitDepBtn" style="margin-top:8px;">Submit for Approval</button>
+        <div id="depMsg" style="display:none;margin-top:8px;"></div>
+      </div>
+    </div>
+
+    <div id="alerts" class="tab-content">
+      <div class="card">
+        <h3>Notifications</h3>
+        <div id="notifList">${notifications.length ? '' : '<p style="color:#888;">No notifications yet.</p>'}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('submitDepBtn').addEventListener('click', submitDeposit);
+  await loadMemberHistory(memberId);
+  await loadNotifications();
+}
+
+// -----------------------------
+// Shared UI actions
+// -----------------------------
 async function addNewMember() {
-    const mid = document.getElementById("newMid").value.trim();
-    const name = document.getElementById("newName").value.trim();
-    const mob = document.getElementById("newMob").value.trim();
-    const fee = document.getElementById("newFee").value.trim();
-
-    if (!mid || !name || !mob || !fee) {
-        alert("All fields are required");
-        return;
-    }
-
-    try {
-        await backend.addMember({
-            memberId: mid,
-            name: name,
-            mobile: mob,
-            monthlyFee: parseInt(fee),
-            role: 'Member',
-            joinDate: new Date().toISOString().split('T')[0]
-        });
-        alert("Member added successfully!");
-        renderAdmin();
-    } catch (err) {
-        alert(err.message);
-    }
+  const mid = document.getElementById("newMid").value.trim();
+  const name = document.getElementById("newName").value.trim();
+  const mob = document.getElementById("newMob").value.trim();
+  const fee = document.getElementById("newFee").value.trim();
+  if (!mid || !name || !mob || !fee) { alert("All fields are required"); return; }
+  try {
+    await backend.addMember({ memberId: mid, name, mobile: mob, monthlyFee: parseInt(fee), role: 'Member', joinDate: new Date().toISOString().split('T')[0] });
+    alert("Member added successfully!");
+    await renderAdmin();
+  } catch (err) {
+    alert(err.message || 'Failed to add member');
+  }
 }
 
 async function updateFund() {
-    const amt = document.getElementById("engFund").value;
-    await backend.updateEnglishFund(amt);
-    alert("Fund updated!");
-    renderAdmin();
+  const amt = document.getElementById("engFund").value;
+  await backend.updateEnglishFund(amt);
+  alert("Fund updated!");
+  await renderAdmin();
 }
 
 async function saveInvestment() {
-    const title = document.getElementById("invTitle").value.trim();
-    const amt = document.getElementById("invAmt").value.trim();
-    if (!title || !amt) return;
-    await backend.saveInvestment(title, parseInt(amt));
-    alert("Investment recorded!");
-    renderAdmin();
+  const title = document.getElementById("invTitle").value.trim();
+  const amt = document.getElementById("invAmt").value.trim();
+  if (!title || !amt) { alert("Title and amount required"); return; }
+  await backend.saveInvestment(title, parseInt(amt));
+  alert("Investment recorded!");
+  await renderAdmin();
 }
 
 async function sendNotification() {
-    const msg = document.getElementById("notifMsg").value.trim();
-    if (!msg) return;
-    await backend.sendNotification(msg);
-    alert("Notification sent!");
-    document.getElementById("notifMsg").value = "";
+  const msg = document.getElementById("notifMsg").value.trim();
+  if (!msg) return;
+  await backend.sendNotification(msg);
+  alert("Notification sent!");
+  document.getElementById("notifMsg").value = "";
 }
 
 async function saveCollection() {
-    const mid = document.getElementById("cmid").value.trim();
-    const amt = document.getElementById("amt").value.trim();
-    const month = document.getElementById("month").value.trim();
-    const sMsg = document.getElementById("amsg");
-    const eMsg = document.getElementById("aerr");
+  const mid = document.getElementById("cmid").value.trim();
+  const amt = document.getElementById("amt").value.trim();
+  const month = document.getElementById("month").value.trim();
+  const sMsg = document.getElementById("amsg");
+  const eMsg = document.getElementById("aerr");
+  sMsg.style.display = eMsg.style.display = 'none';
 
-    sMsg.style.display = 'none';
-    eMsg.style.display = 'none';
+  if (!mid || !amt) {
+    eMsg.innerText = "Member ID and Amount are required"; eMsg.style.display = 'block'; return;
+  }
 
-    if (!mid || !amt) {
-        eMsg.innerText = "Member ID and Amount are required";
-        eMsg.style.display = 'block';
-        return;
-    }
-
-    try {
-        const result = await backend.saveCollection({
-            memberId: mid,
-            amount: parseInt(amt),
-            month: month,
-            type: document.getElementById("depType").value,
-            gateway: document.getElementById("gateway").value,
-            bankName: document.getElementById("bankName").value,
-            trxId: document.getElementById("trxId").value
-        });
-        sMsg.innerText = `Successfully collected Tk. ${amt} from Member ${mid}`;
-        sMsg.style.display = 'block';
-        showReceipt(result.collection);
-        document.getElementById("cmid").value = "";
-    } catch (err) {
-        eMsg.innerText = err.message;
-        eMsg.style.display = 'block';
-    }
-}
-
-// --- MEMBER VIEWS ---
-
-async function renderMember(memberId) {
-    const m = await backend.getMemberProfile(memberId);
-    const d = await backend.getMemberDue(memberId);
-    const notifications = await backend.getNotifications();
-    
-    app.innerHTML = `
-    <div class="tabs-container">
-        <button class="tab-btn active" onclick="switchTab('overview')"><i class="fa-solid fa-house-user"></i> Overview</button>
-        <button class="tab-btn" onclick="switchTab('payments')"><i class="fa-solid fa-history"></i> Payments</button>
-        <button class="tab-btn" onclick="switchTab('deposit')"><i class="fa-solid fa-hand-holding-medical"></i> Submit Deposit</button>
-        <button class="tab-btn" onclick="switchTab('alerts')"><i class="fa-solid fa-bell"></i> Notifications (${notifications.length})</button>
-    </div>
-
-    <!-- Overview Tab -->
-    <div id="overview" class="tab-content active">
-        <div class="card" style="border-left: 5px solid var(--primary);">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-user-circle"></i> My Profile</h3>
-            </div>
-            <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                <div>
-                    <p><b>Name:</b> ${m.name}</p>
-                    <p><b>Member ID:</b> ${m.memberId}</p>
-                    <p><b>Mobile:</b> ${m.mobile}</p>
-                </div>
-                <div>
-                    <p><b>Join Date:</b> ${m.joinDate}</p>
-                    <p><b>Monthly Fee:</b> Tk. ${m.monthlyFee}</p>
-                    <p><b>Status:</b> <span class="badge badge-approved">Active</span></p>
-                </div>
-            </div>
-        </div>
-
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value">Tk. ${d.paid.toLocaleString()}</div>
-                <div class="stat-label">Total Paid</div>
-            </div>
-            <div class="stat-item" style="border-top-color: ${d.due > 0 ? '#dc3545' : '#198754'}">
-                <div class="stat-value" style="color: ${d.due > 0 ? '#dc3545' : '#198754'}">Tk. ${d.due.toLocaleString()}</div>
-                <div class="stat-label">Total Due</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Payments Tab -->
-    <div id="payments" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-receipt"></i> Payment History</h3>
-            </div>
-            <p style="font-size: 0.8rem; color: #666; margin-bottom: 15px;"><i class="fa-solid fa-info-circle"></i> Click any record to view/print receipt</p>
-            <div id="hist">Loading history...</div>
-        </div>
-    </div>
-
-    <!-- Deposit Tab -->
-    <div id="deposit" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-paper-plane"></i> Submit Monthly Deposit</h3>
-            </div>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Submit your monthly fee for admin approval.</p>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Month</label>
-                    <input id="depMonth" value="${new Date().toLocaleString('default', { month: 'long', year: 'numeric' })}">
-                </div>
-                <div class="form-group">
-                    <label>Amount (Tk)</label>
-                    <input id="depAmt" type="number" value="${m.monthlyFee}">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Payment Gateway</label>
-                    <select id="depGateway" onchange="toggleBankField(this.value, 'depBankGroup')">
-                        <option value="Bkash">Bkash</option>
-                        <option value="Nagad">Nagad</option>
-                        <option value="Rocket">Rocket</option>
-                        <option value="Bank Transfer">Bank Transfer</option>
-                        <option value="Cash">Cash</option>
-                    </select>
-                </div>
-                <div class="form-group" id="depBankGroup" style="display: none;">
-                    <label>Bank Name</label>
-                    <input id="depBankName" placeholder="Enter bank name">
-                </div>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                <div class="form-group">
-                    <label>Transaction ID</label>
-                    <input id="depTrxId" placeholder="Enter TRX ID">
-                </div>
-                <div class="form-group">
-                    <label>Deposit Slip (Photo)</label>
-                    <input id="depSlipPhoto" type="file" accept="image/*">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label>Note (Optional)</label>
-                <textarea id="depNote" rows="2" placeholder="Add any additional info..."></textarea>
-            </div>
-
-            <button onclick="submitDeposit()"><i class="fa-solid fa-cloud-upload"></i> Submit for Approval</button>
-            <div id="depMsg" class="success"></div>
-        </div>
-    </div>
-
-    <!-- Alerts Tab -->
-    <div id="alerts" class="tab-content">
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-bell"></i> Association Alerts</h3>
-            </div>
-            <div id="notifList">
-                ${notifications.length ? '' : '<p class="text-center" style="color:#888; padding:20px;">No notifications yet.</p>'}
-            </div>
-        </div>
-    </div>
-    `;
-    loadMemberHistory(memberId);
-    loadNotifications();
+  try {
+    const result = await backend.saveCollection({
+      memberId: mid,
+      amount: parseInt(amt),
+      month,
+      type: document.getElementById("depType").value,
+      gateway: document.getElementById("gateway").value,
+      bankName: document.getElementById("bankName")?.value || '',
+      trxId: document.getElementById("trxId")?.value || ''
+    });
+    sMsg.innerText = `Successfully collected Tk. ${amt} from Member ${mid}`; sMsg.style.display = 'block';
+    showReceipt(result.collection);
+    document.getElementById("cmid").value = "";
+  } catch (err) {
+    eMsg.innerText = err.message || 'Failed'; eMsg.style.display = 'block';
+  }
 }
 
 async function submitDeposit() {
-    const month = document.getElementById("depMonth").value;
-    const amt = document.getElementById("depAmt").value;
-    const gateway = document.getElementById("depGateway").value;
-    const bankName = document.getElementById("depBankName").value;
-    const trxId = document.getElementById("depTrxId").value;
-    const note = document.getElementById("depNote").value;
-    const msg = document.getElementById("depMsg");
-    
-    msg.style.display = 'none';
-    msg.className = "success";
+  const month = document.getElementById("depMonth").value;
+  const amt = document.getElementById("depAmt").value;
+  const gateway = document.getElementById("depGateway").value;
+  const bankName = document.getElementById("depBankName")?.value || '';
+  const trxId = document.getElementById("depTrxId").value;
+  const note = document.getElementById("depNote").value;
+  const msg = document.getElementById("depMsg");
+  msg.style.display = 'none';
 
-    if (!amt) {
-        msg.innerText = "Please enter amount";
-        msg.className = "error";
-        msg.style.display = "block";
-        return;
-    }
-
-    try {
-        if (!currentUser) throw new Error("User session not found. Please login again.");
-
-        await backend.saveCollection({
-            memberId: currentUser.memberId,
-            amount: parseInt(amt),
-            month: month,
-            gateway: gateway,
-            bankName: bankName,
-            trxId: trxId,
-            note: note,
-            status: 'Pending',
-            type: 'Monthly Fee'
-        });
-        msg.innerText = "Deposit submitted! Waiting for admin approval.";
-        msg.style.display = "block";
-        
-        // Clear fields
-        document.getElementById("depTrxId").value = "";
-        document.getElementById("depNote").value = "";
-    } catch (err) {
-        msg.innerText = err.message;
-        msg.className = "error";
-        msg.style.display = "block";
-    }
+  if (!amt) { msg.innerText = "Please enter amount"; msg.style.display = "block"; return; }
+  try {
+    if (!currentUser) throw new Error("User session not found. Please login again.");
+    await backend.saveCollection({
+      memberId: currentUser.memberId,
+      amount: parseInt(amt),
+      month,
+      gateway,
+      bankName,
+      trxId,
+      note,
+      status: 'Pending',
+      type: 'Monthly Fee'
+    });
+    msg.innerText = "Deposit submitted! Waiting for admin approval."; msg.style.display = "block";
+    document.getElementById("depTrxId").value = "";
+    document.getElementById("depNote").value = "";
+  } catch (err) {
+    msg.innerText = err.message || 'Failed'; msg.style.display = "block";
+  }
 }
 
 function lookupMemberName(id, displayId) {
-    const members = JSON.parse(localStorage.getItem('taqwa_members') || '[]');
-    const member = members.find(m => m.memberId === id);
-    const display = document.getElementById(displayId);
-    if (display) {
-        if (member) {
-            display.innerText = `Member: ${member.name}`;
-            display.style.color = 'var(--primary)';
-        } else {
-            display.innerText = id ? 'Member not found' : '';
-            display.style.color = '#dc3545';
-        }
-    }
+  const members = JSON.parse(localStorage.getItem('taqwa_members') || '[]');
+  const member = members.find(m => m.memberId === id);
+  const display = document.getElementById(displayId);
+  if (!display) return;
+  if (member) { display.innerText = `Member: ${member.name}`; display.style.color = 'var(--primary)'; }
+  else { display.innerText = id ? 'Member not found' : ''; display.style.color = '#dc3545'; }
 }
 
 function toggleBankField(val, targetId) {
-    const el = document.getElementById(targetId);
-    if (el) {
-        if (val === 'Bank Transfer') {
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
-        }
-    }
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  el.style.display = val === 'Bank Transfer' ? 'block' : 'none';
 }
 
-async function loadNotifications() {
-    const list = document.getElementById("notifList");
-    if (!list) return;
-    const notifications = await backend.getNotifications();
-    
-    let html = '<div class="notification-list">';
-    notifications.reverse().forEach(n => {
-        html += `
-        <div class="notification-item">
-            <div class="notification-msg">${n.message}</div>
-            <div class="notification-time"><i class="fa-regular fa-clock"></i> ${n.date}</div>
-        </div>`;
-    });
-    list.innerHTML = html + '</div>';
-}
-
-// --- SHARED UI HELPERS ---
-
+// Receipts & export
 function showReceipt(data) {
-    const modal = document.createElement('div');
-    modal.id = 'receipt-modal';
-    modal.className = 'modal-overlay';
-    modal.innerHTML = `
-        <div class="receipt-card" id="receipt-content">
-            <div class="receipt-header">
-                <div class="logo" style="justify-content: center; color: var(--primary); margin-bottom: 5px;">
-                    <i class="fa-solid fa-building-user"></i> Taqwa Property BD
-                </div>
-                <h3 style="border:none; margin:0; padding:0; font-size: 1.2rem;">Payment Receipt</h3>
-                <p style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px;">Official Record</p>
-            </div>
-            <div class="receipt-body">
-                <div class="receipt-row"><span>Receipt ID:</span><b>#${data.id.toString().slice(-6)}</b></div>
-                <div class="receipt-row"><span>Date:</span><b>${data.date}</b></div>
-                <hr style="border:none; border-top: 1px dashed #eee; margin: 15px 0;">
-                <div class="receipt-row"><span>Member Name:</span><b>${data.memberName || 'N/A'}</b></div>
-                <div class="receipt-row"><span>Member ID:</span><b>${data.memberId}</b></div>
-                <div class="receipt-row"><span>Payment For:</span><b>${data.month}</b></div>
-                <div class="receipt-row" style="margin-top: 20px; font-size: 1.3rem; color: var(--primary);">
-                    <span>Amount Paid:</span>
-                    <b>Tk. ${data.amount.toLocaleString()}</b>
-                </div>
-                <div class="receipt-row" style="margin-top: 5px;">
-                    <span>Status:</span>
-                    <b style="color: ${data.status === 'Approved' ? 'var(--primary)' : '#f39c12'}">${data.status || 'Approved'}</b>
-                </div>
-            </div>
-            <div class="receipt-footer">
-                <p>Thank you for your contribution!</p>
-                <p style="font-size: 0.7rem;">This is a computer generated receipt.</p>
-            </div>
-            <div class="receipt-actions">
-                <button onclick="window.print()" class="btn-secondary"><i class="fa-solid fa-print"></i> Print</button>
-                <button onclick="sendWhatsApp('${data.memberId}', '${data.amount}', '${data.month}')" class="btn-whatsapp"><i class="fa-brands fa-whatsapp"></i> Send</button>
-            </div>
-            <button onclick="document.getElementById('receipt-modal').remove()" style="background:none; color:#999; position:absolute; top:15px; right:15px; width:auto; margin:0; padding:5px;">
-                <i class="fa-solid fa-times fa-lg"></i>
-            </button>
-        </div>
-    `;
-    document.body.appendChild(modal);
+  const modal = document.createElement('div');
+  modal.id = 'receipt-modal';
+  modal.className = 'modal-overlay';
+  modal.innerHTML = `
+    <div class="receipt-card" id="receipt-content" style="position:relative;padding:18px;background:#fff;border-radius:8px;max-width:420px;margin:40px auto;">
+      <h3>Payment Receipt</h3>
+      <div><strong>Receipt ID:</strong> #${String(data.id).slice(-6)}</div>
+      <div><strong>Date:</strong> ${data.date}</div>
+      <div><strong>Member:</strong> ${data.memberName || 'N/A'} (${data.memberId})</div>
+      <div style="margin-top:10px;"><strong>Amount:</strong> Tk. ${formatCurrency(data.amount)}</div>
+      <div style="margin-top:12px;"><strong>Status:</strong> ${data.status || 'Approved'}</div>
+      <div style="margin-top:14px;">
+        <button onclick="window.print()" class="btn-secondary">Print</button>
+        <button onclick="sendWhatsApp('${data.memberId}', '${data.amount}', '${data.month}')" class="btn-whatsapp">Send</button>
+        <button onclick="document.getElementById('receipt-modal').remove()" style="margin-left:8px;">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 async function viewReceipt(id) {
-    const data = await backend.getCollectionById(id);
-    if (data) showReceipt(data);
+  const data = await backend.getCollectionById(id);
+  if (data) showReceipt(data);
 }
 
 async function sendWhatsApp(memberId, amount, month) {
-    const members = await backend.getAllMembers();
-    const member = members.find(m => m.memberId === memberId);
-    if (!member) return;
-    const message = `*Taqwa Property BD - Payment Received*%0A%0AHello ${member.name},%0AWe have received your payment of *Tk. ${amount}* for *${month}*.%0A%0AThank you!`;
-    window.open(`https://wa.me/${member.mobile.replace(/\+/g, '')}?text=${message}`, '_blank');
+  const members = await backend.getAllMembers();
+  const member = members.find(m => m.memberId === memberId);
+  if (!member) return;
+  const message = `*Taqwa Property BD - Payment Received*%0A%0AHello ${member.name},%0AWe have received your payment of *Tk. ${amount}* for *${month}*.%0A%0AThank you!`;
+  window.open(`https://wa.me/${member.mobile.replace(/\+/g, '')}?text=${message}`, '_blank');
 }
 
 async function loadMemberList() {
-    const members = await backend.getAllMembers();
-    let html = `<table><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Fee</th><th>Role</th></tr></thead><tbody>`;
-    members.forEach(m => {
-        html += `
-        <tr style="cursor:pointer" onclick="openMemberProfile('${m.memberId}')">
-            <td><b>${m.memberId}</b></td>
-            <td>${m.name}</td>
-            <td>${m.mobile}</td>
-            <td>Tk. ${m.monthlyFee}</td>
-            <td><span class="badge badge-${m.role.toLowerCase()}">${m.role}</span></td>
-        </tr>`;
-    });
-    document.getElementById("memberList").innerHTML = html + `</tbody></table>`;
+  const members = await backend.getAllMembers();
+  let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr><th>ID</th><th>Name</th><th>Mobile</th><th>Fee</th><th>Role</th></tr></thead><tbody>`;
+  members.forEach(m => {
+    html += `<tr style="cursor:pointer" onclick="openMemberProfile('${m.memberId}')">
+      <td><b>${m.memberId}</b></td><td>${m.name}</td><td>${m.mobile}</td><td>Tk. ${formatCurrency(m.monthlyFee)}</td><td>${m.role}</td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  const el = document.getElementById("memberList");
+  if (el) el.innerHTML = html;
 }
 
 async function openMemberProfile(memberId) {
-    const m = await backend.getMemberProfile(memberId);
-    const collections = await backend.getMemberCollections(memberId);
-    
-    let histHtml = '<div class="history-list">';
-    collections.reverse().forEach(r => {
-        histHtml += `
-        <div class="history-item" onclick="viewReceipt('${r.id}')">
-            <div class="history-info">
-                <h5>${r.month}</h5>
-                <div class="history-date">${r.date}</div>
-            </div>
-            <div class="history-amount">Tk. ${r.amount.toLocaleString()}</div>
-        </div>`;
-    });
-    histHtml += '</div>';
-
-    document.getElementById("memberList").innerHTML = `
-    <div class="card" style="border-left: 5px solid var(--primary);">
-        <div class="card-header">
-            <h3>Member Profile: ${m.name}</h3>
-            <button onclick="loadMemberList()" style="width:auto; padding: 5px 15px; background:#6c757d;">Back</button>
-        </div>
-        <div class="stats-grid">
-            <div class="stat-item">
-                <div class="stat-value">Tk. ${m.totalPaid.toLocaleString()}</div>
-                <div class="stat-label">Total Paid</div>
-            </div>
-            <div class="stat-item" style="border-top-color: ${m.totalDue > 0 ? '#dc3545' : '#198754'}">
-                <div class="stat-value" style="color: ${m.totalDue > 0 ? '#dc3545' : '#198754'}">Tk. ${m.totalDue.toLocaleString()}</div>
-                <div class="stat-label">Current Due</div>
-            </div>
-        </div>
-        <div style="margin-top: 20px;">
-            <h4>Payment History</h4>
-            ${histHtml}
-        </div>
+  const m = await backend.getMemberProfile(memberId);
+  const collections = await backend.getMemberCollections(memberId);
+  let histHtml = '<div class="history-list">';
+  collections.slice().reverse().forEach(r => {
+    histHtml += `<div class="history-item" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;cursor:pointer" onclick="viewReceipt('${r.id}')">
+      <div><strong>${r.month}</strong><div style="font-size:.85rem;color:#666">${r.date}</div></div>
+      <div>Tk. ${formatCurrency(r.amount)}</div>
     </div>`;
+  });
+  histHtml += '</div>';
+
+  const el = document.getElementById("memberList");
+  if (!el) return;
+  el.innerHTML = `
+    <div class="card">
+      <h3>Member Profile: ${m.name}</h3>
+      <button onclick="loadMemberList()" style="float:right;background:#6c757d;color:#fff;padding:6px 10px;border-radius:4px;border:none;">Back</button>
+      <div style="clear:both"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <div class="card"><h4>Total Paid</h4><p>Tk. ${formatCurrency(m.totalPaid)}</p></div>
+        <div class="card"><h4>Current Due</h4><p>Tk. ${formatCurrency(m.totalDue)}</p></div>
+      </div>
+      <div style="margin-top:12px;"><h4>Payment History</h4>${histHtml}</div>
+    </div>
+  `;
 }
 
 async function loadMemberHistory(mid) {
-    const rows = await backend.getMemberCollections(mid);
-    if (!rows.length) {
-        document.getElementById("hist").innerHTML = "<p class='text-center' style='color:#888; padding:20px;'>No payments found.</p>";
-        return;
-    }
-    let html = '<div class="history-list">';
-    rows.reverse().forEach(r => {
-        html += `
-        <div class="history-item" onclick="viewReceipt('${r.id}')">
-            <div class="history-info">
-                <h5>${r.month}</h5>
-                <div class="history-date">${r.date}</div>
-            </div>
-            <div class="history-amount">Tk. ${r.amount.toLocaleString()}</div>
-        </div>`;
-    });
-    document.getElementById("hist").innerHTML = html + '</div>';
+  const rows = await backend.getMemberCollections(mid);
+  const el = document.getElementById("hist");
+  if (!el) return;
+  if (!rows.length) {
+    el.innerHTML = "<p style='color:#888;padding:10px;'>No payments found.</p>";
+    return;
+  }
+  let html = '<div class="history-list">';
+  rows.slice().reverse().forEach(r => {
+    html += `<div class="history-item" style="display:flex;justify-content:space-between;padding:8px;border-bottom:1px solid #eee;cursor:pointer" onclick="viewReceipt('${r.id}')">
+      <div><strong>${r.month}</strong><div style="font-size:.85rem;color:#666">${r.date}</div></div>
+      <div>Tk. ${formatCurrency(r.amount)}</div>
+    </div>`;
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+async function loadNotifications() {
+  const list = document.getElementById("notifList");
+  if (!list) return;
+  const notifications = await backend.getNotifications();
+  if (!notifications.length) { list.innerHTML = '<p style="color:#888;">No notifications yet.</p>'; return; }
+  let html = '<div class="notification-list">';
+  notifications.slice().reverse().forEach(n => {
+    html += `<div style="padding:8px;border-bottom:1px solid #eee;"><div>${n.message}</div><div style="font-size:.8rem;color:#666">${n.date}</div></div>`;
+  });
+  html += '</div>';
+  list.innerHTML = html;
 }
 
 function exportToCSV(filename, rows) {
-    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
-    const link = document.createElement("a");
-    link.setAttribute("href", encodeURI(csvContent));
-    link.setAttribute("download", filename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const csvContent = "data:text/csv;charset=utf-8," + rows.map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const link = document.createElement("a");
+  link.setAttribute("href", encodeURI(csvContent));
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
 
 async function exportMembers() {
-    const members = await backend.getAllMembers();
-    const rows = [["ID", "Name", "Mobile", "Role", "Fee"], ...members.map(m => [m.memberId, m.name, m.mobile, m.role, m.monthlyFee])];
-    exportToCSV("members.csv", rows);
+  const members = await backend.getAllMembers();
+  const rows = [["ID", "Name", "Mobile", "Role", "Fee"], ...members.map(m => [m.memberId, m.name, m.mobile, m.role, m.monthlyFee])];
+  exportToCSV("members.csv", rows);
 }
 
 async function exportCollections() {
-    const collections = await backend.getCollections();
-    const rows = [["ID", "Member", "Amount", "Month", "Date", "Status"], ...collections.map(c => [c.id, c.memberName, c.amount, c.month, c.date, c.status])];
-    exportToCSV("collections.csv", rows);
+  const collections = await backend.getCollections();
+  const rows = [["ID", "Member", "Amount", "Month", "Date", "Status"], ...collections.map(c => [c.id, c.memberName, c.amount, c.month, c.date, c.status])];
+  exportToCSV("collections.csv", rows);
 }
 
-// Initialize App
-renderLogin();
+// -----------------------------
+// Boot: initialize backend & render login
+// -----------------------------
+(async function boot() {
+  await initBackend();
+  renderLogin();
+  // expose functions used by inline handlers (so "onclick" style calls still work)
+  window.switchTab = switchTab;
+  window.logout = logout;
+  window.viewReceipt = viewReceipt;
+  window.openMemberProfile = openMemberProfile;
+  window.lookupMemberName = lookupMemberName;
+  window.toggleBankField = toggleBankField;
+  window.sendWhatsApp = sendWhatsApp;
+})();
