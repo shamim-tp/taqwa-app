@@ -1033,11 +1033,24 @@ async function openMemberProfile(memberId) {
     if (!memberListEl) return;
 
     memberListEl.innerHTML = `
+// মেম্বার প্রোফাইল দেখানোর ফাংশন (যেখানে ব্যাক বাটন আছে)
+window.viewMemberProfile = function(memberId) {
+    // মেম্বার খুঁজে বের করার লজিক...
+    
+    app.innerHTML = `
     <div class="card" style="border-left: 5px solid var(--primary);">
-        <div class="card-header">
+        <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
             <h3>Member Profile: ${m.name}</h3>
-            <button onclick="loadMemberList()" style="width:auto; padding: 5px 15px; background:#6c757d;">Back</button>
+            <button onclick="loadMemberList()" style="width:auto; padding: 5px 15px; background:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer;">
+                Back
+            </button>
         </div>
+        <div class="card-body">
+            <p>ID: ${m.memberId}</p>
+            <p>Mobile: ${m.mobile}</p>
+            </div>
+    </div>`;
+}
         <div class="stats-grid">
             <div class="stat-item">
                 <div class="stat-value">Tk. ${Number(m.totalPaid || 0).toLocaleString()}</div>
