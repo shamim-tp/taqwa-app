@@ -147,10 +147,15 @@ class Backend {
         }
     }
 
-    async login(memberId, mobile) {
-        if (memberId === '100' && mobile === '01700000000') {
-            return { memberId: '100', name: 'Admin User', role: 'Admin' };
-        }
+const users = [
+    { memberId: '100', mobile: '123', name: 'Admin User', role: 'Admin' },
+    { memberId: '101', mobile: '123', name: 'Demo Member', role: 'Member' }
+];
+
+async login(memberId, mobile) {
+    return users.find(u => u.memberId === memberId && u.mobile === mobile) || null;
+}
+
 
         if (this.useFirebase) {
             const members = await this.getMembers();
