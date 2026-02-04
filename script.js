@@ -2,6 +2,66 @@
  * Taqwa Property BD - Application Logic
  * Simulates backend operations with localStorage for full functionality in simple mode
  */
+/**
+ * taqwa_property_app.js (DEBUG VERSION)
+ * 
+ * Use this version to identify exactly where the problem is.
+ */
+
+/* Firebase imports */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+console.log("Step 1: Script Loaded");
+
+// --- CONFIGURATION ---
+// If you are testing locally without internet, set this to FALSE
+const USE_FIREBASE = true; 
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDrLvyex6ui6dbKqsX697PplrmZvr-6Hag",
+    authDomain: "taqwa-property-41353.firebaseapp.com",
+    databaseURL: "https://taqwa-property-41353-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "taqwa-property-41353",
+    storageBucket: "taqwa-property-41353.firebasestorage.app",
+    messagingSenderId: "287655809647",
+    appId: "1:287655809647:web:598c88721282d8ae9b739a",
+    measurementId: "G-7WTLSZ99TV"
+};
+
+let db = null;
+if (USE_FIREBASE) {
+    try {
+        const firebaseApp = initializeApp(firebaseConfig);
+        db = getDatabase(firebaseApp);
+        console.log("Step 2: Firebase Initialized");
+    } catch (e) {
+        console.warn("Firebase initialization failed, falling back to mock local backend.", e);
+        db = null;
+    }
+}
+
+// --- DOM ELEMENTS ---
+const app = document.getElementById("app");
+const userInfo = document.getElementById("userInfo");
+const userNameSpan = document.getElementById("userName");
+
+// DEBUG: Check if elements exist
+if (!app) {
+    alert("ERROR: HTML <div id='app'> not found! Please check your HTML file.");
+    throw new Error("#app element missing");
+}
+
+console.log("Step 3: DOM Elements Found");
+
+// --- BACKEND CLASS ---
+class Backend {
+    constructor(options = {}) {
+        this.useFirebase = options.useFirebase;
+        if (!this.useFirebase) {
+            this.initMockData();
+        }
+    }
 
 const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
