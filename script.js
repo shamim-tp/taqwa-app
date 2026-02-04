@@ -46,12 +46,12 @@ const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
 // --- BACKEND CLASS (single unified implementation) ---
-class Backend {
-    constructor(options = {}) {
-        this.useFirebase = options.useFirebase && db;
-        if (!this.useFirebase) {
+//class Backend {
+ //   constructor(options = {}) {
+     //   this.useFirebase = options.useFirebase && db;
+      //  if (!this.useFirebase) {
             // Initialize mock data in localStorage once
-            this.initMockData();
+        //    this.initMockData();
         }
     }
 // --- BACKEND CLASS ---
