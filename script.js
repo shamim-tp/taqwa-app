@@ -45,53 +45,71 @@ const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-   // --- BACKEND CLASS (সংশোধিত সংস্করণ) ---
+// --- BACKEND CLASS (single unified implementation) ---
 class Backend {
     constructor(options = {}) {
-        this.useFirebase = options.useFirebase;
+        this.useFirebase = options.useFirebase && db;
         if (!this.useFirebase) {
+            // Initialize mock data in localStorage once
             this.initMockData();
         }
     }
 
-    // Mock Data ইনিশিয়ালাইজেশন (যদি Firebase না থাকে)
+    // ---------- LocalStorage mock initialization ----------
     initMockData() {
         if (!localStorage.getItem('taqwa_members')) {
             const initialMembers = [
-                { memberId: '100', name: 'Admin User', mobile: '01700000000', role: 'Admin', monthlyFee: 0, joinDate: '2023-01-01' },
-                { memberId: '101', name: 'Abdul Karim', mobile: '01711111111', role: 'Member', monthlyFee: 5000, joinDate: '2023-05-15' }
+                { memberId: '100', name: 'Admin User', mobile: '01700000000', password: '123', role: 'Admin', monthlyFee: 0, joinDate: '2023-01-01' },
+                { memberId: '101', name: 'Abdul Karim', mobile: '01711111111', password: '123', role: 'Member', monthlyFee: 5000, joinDate: '2023-05-15' },
+                { memberId: '102', name: 'Rahim Uddin', mobile: '01822222222', password: '123', role: 'Member', monthlyFee: 10000, joinDate: '2023-06-20' }
             ];
-            this._setLocal('taqwa_members', initialMembers);
+            localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
+        }
+        if (!localStorage.getItem('taqwa_collections')) {
+            const initialCollections = [
+                { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
+                { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
+                { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
+            ];
+            localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
+        }
+        if (!localStorage.getItem('taqwa_investments')) {
+            const initialInvestments = [
+                { id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }
+            ];
+            localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
+        }
+        if (!localStorage.getItem('taqwa_funds')) {
+            const initialFunds = { englishFund: 25000 };
+            localStorage.setItem('taqwa_funds', JSON.stringify(initialFunds));
+        }
+        if (!localStorage.getItem('taqwa_notifications')) {
+            localStorage.setItem('taqwa_notifications', JSON.stringify([]));
         }
     }
 
-    // ---------- Helpers ----------
+    // ---------- Helpers for mock ----------
     delay(ms = 250) { return new Promise(res => setTimeout(res, ms)); }
     _getLocal(key, fallback = '[]') { return JSON.parse(localStorage.getItem(key) || fallback); }
     _setLocal(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
     // ---------- Firebase wrappers ----------
     async _fb_get(path) {
-        if (!db) return null;
         const snapshot = await get(ref(db, path));
-        return (snapshot && snapshot.exists()) ? snapshot.val() : null;
+        if (!snapshot || !snapshot.exists()) return null;
+        return snapshot.val();
     }
-    
     async _fb_push(path, obj) {
         const newRef = push(ref(db, path));
         await set(newRef, obj);
         return obj;
     }
-
     async _fb_set(path, obj) {
         await set(ref(db, path), obj);
         return obj;
     }
 
-    // বাকি পাবলিক মেথডগুলো (getMembers, login, ইত্যাদি) আপনার কোড অনুযায়ী ঠিক আছে...
-}
-    
-        // ---------- Public API (same interface as before) ----------
+    // ---------- Public API (same interface as before) ----------
     async getMembers() {
         if (this.useFirebase) {
             const v = await this._fb_get('members');
