@@ -593,7 +593,7 @@ async function renderAdmin() {
                     <input id="newFee" type="number" value="5000">
                 </div>
             </div>
-            <button onclick="addNewMember()"><i class="fa-solid fa-user-check"></i> Add Member</button>
+            <button onclick="window.addNewMember()"><i class="fa-solid fa-user-check"></i> Add Member</button>
         </div>
 
         <div class="card">
@@ -651,7 +651,7 @@ async function renderAdmin() {
 }
 
 // ---------- Admin actions ----------
-async function addNewMember() {
+async function window.addNewMember() {
     const mid = document.getElementById("newMid").value.trim();
     const name = document.getElementById("newName").value.trim();
     const mob = document.getElementById("newMob").value.trim();
