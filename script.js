@@ -1,17 +1,9 @@
 /**
  * taqwa_property_app.js
  * Consolidated and cleaned Taqwa Property BD application logic.
- *
- * - Single Backend class that supports Firebase (default) with a localStorage mock fallback.
- * - Removed duplicate declarations and duplicated class definitions.
- * - Kept original UI logic and helper functions intact.
- *
- * Usage:
- * - By default the file tries to use Firebase. If you'd rather run in demo/mock mode,
- *   set USE_FIREBASE = false below.
  */
 
-/* Firebase imports (kept as in original) */
+/* Firebase imports */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getDatabase, ref, set, get, push, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
@@ -40,12 +32,12 @@ if (USE_FIREBASE) {
     }
 }
 
-// --- DOM ELEMENTS (single declarations) ---
+// --- DOM ELEMENTS ---
 const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-// --- BACKEND CLASS (সংশোধিত সংস্করণ) ---
+// --- BACKEND CLASS ---
 class Backend {
     constructor(options = {}) {
         this.useFirebase = options.useFirebase;
@@ -54,7 +46,7 @@ class Backend {
         }
     }
 
-    // Mock Data ইনিশিয়ালাইজেশন (যদি Firebase না থাকে)
+    // Initialize Mock Data (if Firebase is not used)
     initMockData() {
         if (!localStorage.getItem('taqwa_members')) {
             const initialMembers = [
@@ -110,12 +102,10 @@ class Backend {
         return obj;
     }
 
-    // বাকি পাবলিক মেথডগুলো (getMembers, login, ইত্যাদি) আপনার কোড অনুযায়ী ঠিক আছে...
-    
+    // ---------- Public API ----------
     async getMembers() {
         if (this.useFirebase) {
             const v = await this._fb_get('members');
-            // Firebase stores keyed object; return array
             return v ? Object.values(v) : [];
         } else {
             return this._getLocal('taqwa_members', '[]');
@@ -159,7 +149,6 @@ class Backend {
     }
 
     async login(memberId, mobile) {
-        // Admin fallback: same as before
         if (memberId === '100' && mobile === '01700000000') {
             return { memberId: '100', name: 'Admin User', role: 'Admin' };
         }
@@ -379,7 +368,7 @@ const backend = new Backend({ useFirebase: USE_FIREBASE && !!db });
 let currentUser = null;
 let activeTab = 'dashboard';
 
-// Tab switcher (keeps compatibility with original markup)
+// Tab switcher
 window.switchTab = function (tabId) {
     activeTab = tabId;
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -456,7 +445,7 @@ function renderLogin() {
     </div>`;
 }
 
-// ---------- Admin / Member renderers (kept based on original logic) ----------
+// ---------- Admin / Member renderers ----------
 async function renderAdmin() {
     const data = await backend.getDashboardData();
 
@@ -1110,6 +1099,21 @@ async function exportCollections() {
     const rows = [["ID", "Member", "Amount", "Month", "Date", "Status"], ...collections.map(c => [c.id, c.memberName, c.amount, c.month, c.date, c.status])];
     exportToCSV("collections.csv", rows);
 }
+
+// --- GLOBAL SCOPE ATTACHMENT (FIX FOR ERROR) ---
+window.addNewMember = addNewMember;
+window.updateFund = updateFund;
+window.saveInvestment = saveInvestment;
+window.sendNotification = sendNotification;
+window.saveCollection = saveCollection;
+window.lookupMemberName = lookupMemberName;
+window.toggleBankField = toggleBankField;
+window.viewReceipt = viewReceipt;
+window.sendWhatsApp = sendWhatsApp;
+window.openMemberProfile = openMemberProfile;
+window.submitDeposit = submitDeposit;
+window.exportMembers = exportMembers;
+window.exportCollections = exportCollections;
 
 // Initialize App
 renderLogin();
