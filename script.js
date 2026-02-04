@@ -1,16 +1,14 @@
-
-
-`addNewMember is not defined` এরর আসার কারণ হলো আপনার কোডে ES Module (যেমন `import ... from ...`) ব্যবহার করা হয়েছে। Module-এর ভেতরে ডিফাইন করা ফাংশনগুলো ডিফল্টভাবে Global Scope (অর্থাৎ `window` object)-এ থাকে না। কিন্তু HTML-এ `onclick="addNewMember()"` লেখা থাকলে ব্রাউজার `window.addNewMember` এর খোঁজ করে।
-
-এই সমস্যা সমাধানের জন্য স্ক্রিপ্টের শেষে সব গুরুত্বপূর্ণ ফাংশনকে `window` অবজেক্টের সাথে যুক্ত করে দিতে হবে। নিচে সংশোধিত সম্পূর্ণ কোডটি দেওয়া হলো:
-
-```javascript
 /**
  * taqwa_property_app.js
  * Consolidated and cleaned Taqwa Property BD application logic.
  *
- * - Fixed "addNewMember is not defined" error by attaching functions to window object.
  * - Single Backend class that supports Firebase (default) with a localStorage mock fallback.
+ * - Removed duplicate declarations and duplicated class definitions.
+ * - Kept original UI logic and helper functions intact.
+ *
+ * Usage:
+ * - By default the file tries to use Firebase. If you'd rather run in demo/mock mode,
+ *   set USE_FIREBASE = false below.
  */
 
 /* Firebase imports (kept as in original) */
@@ -47,7 +45,7 @@ const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-// --- BACKEND CLASS ---
+// --- BACKEND CLASS (সংশোধিত সংস্করণ) ---
 class Backend {
     constructor(options = {}) {
         this.useFirebase = options.useFirebase;
@@ -56,7 +54,7 @@ class Backend {
         }
     }
 
-    // Mock Data ইনিশিয়ালাইজেশন
+    // Mock Data ইনিশিয়ালাইজেশন (যদি Firebase না থাকে)
     initMockData() {
         if (!localStorage.getItem('taqwa_members')) {
             const initialMembers = [
@@ -112,10 +110,12 @@ class Backend {
         return obj;
     }
 
-    // ---------- Public API ----------
+    // বাকি পাবলিক মেথডগুলো (getMembers, login, ইত্যাদি) আপনার কোড অনুযায়ী ঠিক আছে...
+    
     async getMembers() {
         if (this.useFirebase) {
             const v = await this._fb_get('members');
+            // Firebase stores keyed object; return array
             return v ? Object.values(v) : [];
         } else {
             return this._getLocal('taqwa_members', '[]');
@@ -159,6 +159,7 @@ class Backend {
     }
 
     async login(memberId, mobile) {
+        // Admin fallback: same as before
         if (memberId === '100' && mobile === '01700000000') {
             return { memberId: '100', name: 'Admin User', role: 'Admin' };
         }
@@ -378,7 +379,7 @@ const backend = new Backend({ useFirebase: USE_FIREBASE && !!db });
 let currentUser = null;
 let activeTab = 'dashboard';
 
-// Tab switcher
+// Tab switcher (keeps compatibility with original markup)
 window.switchTab = function (tabId) {
     activeTab = tabId;
     document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -455,7 +456,7 @@ function renderLogin() {
     </div>`;
 }
 
-// ---------- Admin / Member renderers ----------
+// ---------- Admin / Member renderers (kept based on original logic) ----------
 async function renderAdmin() {
     const data = await backend.getDashboardData();
 
@@ -1110,22 +1111,5 @@ async function exportCollections() {
     exportToCSV("collections.csv", rows);
 }
 
-// --- GLOBAL SCOPE ATTACHMENT (FIX FOR ERROR) ---
-// Attaching functions to window so they are accessible via onclick in HTML
-window.addNewMember = addNewMember;
-window.updateFund = updateFund;
-window.saveInvestment = saveInvestment;
-window.sendNotification = sendNotification;
-window.saveCollection = saveCollection;
-window.lookupMemberName = lookupMemberName;
-window.toggleBankField = toggleBankField;
-window.viewReceipt = viewReceipt;
-window.sendWhatsApp = sendWhatsApp;
-window.openMemberProfile = openMemberProfile;
-window.submitDeposit = submitDeposit;
-window.exportMembers = exportMembers;
-window.exportCollections = exportCollections;
-
 // Initialize App
 renderLogin();
-```
