@@ -54,7 +54,22 @@ class Backend {
             this.initMockData();
         }
     }
+// --- BACKEND CLASS ---
+class Backend {
+    constructor(options = {}) {
+        // নিশ্চিত করুন firebaseConfig ঠিক আছে এবং db তৈরি হয়েছে
+        this.useFirebase = options.useFirebase;
+    }
 
+    // Firebase মেথডগুলোতে 'db' সরাসরি ব্যবহার না করে চেক করে নিন
+    async _fb_get(path) {
+        if (!db) return null; // যদি db তৈরি না হয়
+        const snapshot = await get(ref(db, path));
+        return (snapshot && snapshot.exists()) ? snapshot.val() : null;
+    }
+    
+    // ... বাকি মেথডগুলো আগের মতোই থাকবে
+}
    
 
     // ---------- Helpers for mock ----------
