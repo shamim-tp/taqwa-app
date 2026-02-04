@@ -45,55 +45,53 @@ const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-// --- BACKEND CLASS (single unified implementation) ---
-//class Backend {
- //   constructor(options = {}) {
-     //   this.useFirebase = options.useFirebase && db;
-      //  if (!this.useFirebase) {
-            // Initialize mock data in localStorage once
-        //    this.initMockData();
-        }
-    }
-// --- BACKEND CLASS ---
+   // --- BACKEND CLASS (সংশোধিত সংস্করণ) ---
 class Backend {
     constructor(options = {}) {
-        // নিশ্চিত করুন firebaseConfig ঠিক আছে এবং db তৈরি হয়েছে
         this.useFirebase = options.useFirebase;
+        if (!this.useFirebase) {
+            this.initMockData();
+        }
     }
 
-    // Firebase মেথডগুলোতে 'db' সরাসরি ব্যবহার না করে চেক করে নিন
-    async _fb_get(path) {
-        if (!db) return null; // যদি db তৈরি না হয়
-        const snapshot = await get(ref(db, path));
-        return (snapshot && snapshot.exists()) ? snapshot.val() : null;
+    // Mock Data ইনিশিয়ালাইজেশন (যদি Firebase না থাকে)
+    initMockData() {
+        if (!localStorage.getItem('taqwa_members')) {
+            const initialMembers = [
+                { memberId: '100', name: 'Admin User', mobile: '01700000000', role: 'Admin', monthlyFee: 0, joinDate: '2023-01-01' },
+                { memberId: '101', name: 'Abdul Karim', mobile: '01711111111', role: 'Member', monthlyFee: 5000, joinDate: '2023-05-15' }
+            ];
+            this._setLocal('taqwa_members', initialMembers);
+        }
     }
-    
-    // ... বাকি মেথডগুলো আগের মতোই থাকবে
-}
-   
 
-    // ---------- Helpers for mock ----------
+    // ---------- Helpers ----------
     delay(ms = 250) { return new Promise(res => setTimeout(res, ms)); }
     _getLocal(key, fallback = '[]') { return JSON.parse(localStorage.getItem(key) || fallback); }
     _setLocal(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 
     // ---------- Firebase wrappers ----------
     async _fb_get(path) {
+        if (!db) return null;
         const snapshot = await get(ref(db, path));
-        if (!snapshot || !snapshot.exists()) return null;
-        return snapshot.val();
+        return (snapshot && snapshot.exists()) ? snapshot.val() : null;
     }
+    
     async _fb_push(path, obj) {
         const newRef = push(ref(db, path));
         await set(newRef, obj);
         return obj;
     }
+
     async _fb_set(path, obj) {
         await set(ref(db, path), obj);
         return obj;
     }
 
-    // ---------- Public API (same interface as before) ----------
+    // বাকি পাবলিক মেথডগুলো (getMembers, login, ইত্যাদি) আপনার কোড অনুযায়ী ঠিক আছে...
+}
+    
+        // ---------- Public API (same interface as before) ----------
     async getMembers() {
         if (this.useFirebase) {
             const v = await this._fb_get('members');
