@@ -1,80 +1,66 @@
 /**
- * Taqwa Property BD - Application Logic
- * Simulates backend operations with localStorage for full functionality in simple mode
+ * Taqwa Property BD - Pure Firebase Application
+ * 
+ * This script connects directly to Firebase Realtime Database.
+ * LocalStorage and Mock Data have been completely removed.
  */
 
+/* Firebase Imports */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, get, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// --- FIREBASE CONFIGURATION ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDrLvyex6ui6dbKqsX697PplrmZvr-6Hag",
+    authDomain: "taqwa-property-41353.firebaseapp.com",
+    databaseURL: "https://taqwa-property-41353-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "taqwa-property-41353",
+    storageBucket: "taqwa-property-41353.firebasestorage.app",
+    messagingSenderId: "287655809647",
+    appId: "1:287655809647:web:598c88721282d8ae9b739a",
+    measurementId: "G-7WTLSZ99TV"
+};
+
+// Initialize Firebase
+const firebaseApp = initializeApp(firebaseConfig);
+const db = getDatabase(firebaseApp);
+console.log("Firebase Connected Successfully");
+
+// --- DOM ELEMENTS ---
 const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-// --- MOCK DATABASE & BACKEND ---
-// Initializes dummy data if not present
+if (!app) {
+    alert("ERROR: HTML <div id='app'> not found!");
+    throw new Error("DOM Element Missing");
+}
+
+// --- BACKEND CLASS (FIREBASE ONLY) ---
 class Backend {
-    constructor() {
-        this.initData();
+    
+    // Helper to get data from Firebase
+    async _fb_get(path) {
+        const snapshot = await get(ref(db, path));
+        if (snapshot.exists()) {
+            return snapshot.val();
+        }
+        return null; // Return null if data doesn't exist
     }
 
-    initData() {
-        if (!localStorage.getItem('taqwa_members')) {
-            const initialMembers = [
-                { 
-                    memberId: '100', 
-                    name: 'Admin User', 
-                    mobile: '01700000000', 
-                    password: '123', 
-                    role: 'Admin', 
-                    monthlyFee: 0, 
-                    joinDate: '2023-01-01' 
-                },
-                { 
-                    memberId: '101', 
-                    name: 'Abdul Karim', 
-                    mobile: '01711111111', 
-                    password: '123', 
-                    role: 'Member', 
-                    monthlyFee: 5000, 
-                    joinDate: '2023-05-15' 
-                },
-                { 
-                    memberId: '102', 
-                    name: 'Rahim Uddin', 
-                    mobile: '01822222222', 
-                    password: '123', 
-                    role: 'Member', 
-                    monthlyFee: 10000, 
-                    joinDate: '2023-06-20' 
-                }
-            ];
-            localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
-        }
-
-        if (!localStorage.getItem('taqwa_collections')) {
-            const initialCollections = [
-                { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
-                { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
-                { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
-            ];
-            localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
-        }
-
-        if (!localStorage.getItem('taqwa_investments')) {
-            const initialInvestments = [
-                { id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }
-            ];
-            localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
-        }
-
-        if (!localStorage.getItem('taqwa_funds')) {
-            const initialFunds = {
-                englishFund: 25000
-            };
-            localStorage.setItem('taqwa_funds', JSON.stringify(initialFunds));
-        }
-
-        if (!localStorage.getItem('taqwa_notifications')) {
-            localStorage.setItem('taqwa_notifications', JSON.stringify([]));
-        }
+    // Helper to push data to Firebase
+    async _fb_push(path, data) {
+        const newRef = push(ref(db, path));
+        await set(newRef, data);
+        return data;
     }
+
+    // Helper to set data at specific path
+    async _fb_set(path, data) {
+        await set(ref(db, path), data);
+        return data;
+    }
+
 
     // Simulate API delay
     async delay(ms = 300) {
