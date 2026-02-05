@@ -1,33 +1,4 @@
 /**
- * Taqwa Property BD - Pure Firebase Application
- * 
- * This script connects directly to Firebase Realtime Database.
- * LocalStorage and Mock Data have been completely removed.
- */
-
-/* Firebase Imports */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, get, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// --- FIREBASE CONFIGURATION ---
-const firebaseConfig = {
-    apiKey: "AIzaSyDrLvyex6ui6dbKqsX697PplrmZvr-6Hag",
-    authDomain: "taqwa-property-41353.firebaseapp.com",
-    databaseURL: "https://taqwa-property-41353-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "taqwa-property-41353",
-    storageBucket: "taqwa-property-41353.firebasestorage.app",
-    messagingSenderId: "287655809647",
-    appId: "1:287655809647:web:598c88721282d8ae9b739a",
-    measurementId: "G-7WTLSZ99TV"
-};
-
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
-console.log("Firebase Connected Successfully");
-
-
-/**
  * Taqwa Property BD - Application Logic
  * Simulates backend operations with localStorage for full functionality in simple mode
  */
@@ -1034,22 +1005,6 @@ async function exportCollections() {
     const rows = [["ID", "Member", "Amount", "Month", "Date", "Status"], ...collections.map(c => [c.id, c.memberName, c.amount, c.month, c.date, c.status])];
     exportToCSV("collections.csv", rows);
 }
-
-
-// --- GLOBAL SCOPE ATTACHMENT ---
-window.addNewMember = addNewMember;
-window.updateFund = updateFund;
-window.saveInvestment = saveInvestment;
-window.sendNotification = sendNotification;
-window.saveCollection = saveCollection;
-window.lookupMemberName = lookupMemberName;
-window.toggleBankField = toggleBankField;
-window.viewReceipt = viewReceipt;
-window.sendWhatsApp = sendWhatsApp;
-window.openMemberProfile = openMemberProfile;
-window.submitDeposit = submitDeposit;
-window.exportMembers = exportMembers;
-window.exportCollections = exportCollections;
 
 // Initialize App
 renderLogin();
