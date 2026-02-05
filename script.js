@@ -61,6 +61,83 @@ class Backend {
         return data;
     }
 
+    /**
+ * Taqwa Property BD - Application Logic
+ * Simulates backend operations with localStorage for full functionality in simple mode
+ */
+
+const app = document.getElementById("app");
+const userInfo = document.getElementById("userInfo");
+const userNameSpan = document.getElementById("userName");
+
+// --- MOCK DATABASE & BACKEND ---
+// Initializes dummy data if not present
+class Backend {
+    constructor() {
+        this.initData();
+    }
+
+    initData() {
+        if (!localStorage.getItem('taqwa_members')) {
+            const initialMembers = [
+                { 
+                    memberId: '100', 
+                    name: 'Admin User', 
+                    mobile: '01700000000', 
+                    password: '123', 
+                    role: 'Admin', 
+                    monthlyFee: 0, 
+                    joinDate: '2023-01-01' 
+                },
+                { 
+                    memberId: '101', 
+                    name: 'Abdul Karim', 
+                    mobile: '01711111111', 
+                    password: '123', 
+                    role: 'Member', 
+                    monthlyFee: 5000, 
+                    joinDate: '2023-05-15' 
+                },
+                { 
+                    memberId: '102', 
+                    name: 'Rahim Uddin', 
+                    mobile: '01822222222', 
+                    password: '123', 
+                    role: 'Member', 
+                    monthlyFee: 10000, 
+                    joinDate: '2023-06-20' 
+                }
+            ];
+            localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
+        }
+
+        if (!localStorage.getItem('taqwa_collections')) {
+            const initialCollections = [
+                { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
+                { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
+                { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
+            ];
+            localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
+        }
+
+        if (!localStorage.getItem('taqwa_investments')) {
+            const initialInvestments = [
+                { id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }
+            ];
+            localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
+        }
+
+        if (!localStorage.getItem('taqwa_funds')) {
+            const initialFunds = {
+                englishFund: 25000
+            };
+            localStorage.setItem('taqwa_funds', JSON.stringify(initialFunds));
+        }
+
+        if (!localStorage.getItem('taqwa_notifications')) {
+            localStorage.setItem('taqwa_notifications', JSON.stringify([]));
+        }
+    }
 
     // Simulate API delay
     async delay(ms = 300) {
@@ -992,5 +1069,20 @@ async function exportCollections() {
     exportToCSV("collections.csv", rows);
 }
 
+
+// --- GLOBAL SCOPE ATTACHMENT ---
+window.addNewMember = addNewMember;
+window.updateFund = updateFund;
+window.saveInvestment = saveInvestment;
+window.sendNotification = sendNotification;
+window.saveCollection = saveCollection;
+window.lookupMemberName = lookupMemberName;
+window.toggleBankField = toggleBankField;
+window.viewReceipt = viewReceipt;
+window.sendWhatsApp = sendWhatsApp;
+window.openMemberProfile = openMemberProfile;
+window.submitDeposit = submitDeposit;
+window.exportMembers = exportMembers;
+window.exportCollections = exportCollections;
 // Initialize App
 renderLogin();
