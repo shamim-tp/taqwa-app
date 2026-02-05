@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "266724049111",
+    "firebase_url": "https://taqwa-property-bd-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "taqwa-property-bd",
+    "storage_bucket": "taqwa-property-bd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:266724049111:android:1db1dd1d234d6608bdb092",
+        "android_client_info": {
+          "package_name": "com.taqwa.property"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqWCJDHt1BEIUoohoyqdAmQxNAsBt8IZw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
