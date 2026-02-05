@@ -1,105 +1,111 @@
 /**
- * Taqwa Property BD - Pure Firebase Application
- * 
- * This script connects directly to Firebase Realtime Database.
- * LocalStorage and Mock Data have been completely removed.
+ * Taqwa Property BD - Application Logic
+ * Simulates backend operations with localStorage for full functionality in simple mode
  */
 
-/* Firebase Imports */
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, get, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-
-// --- FIREBASE CONFIGURATION ---
-const firebaseConfig = {
-    apiKey: "AIzaSyDrLvyex6ui6dbKqsX697PplrmZvr-6Hag",
-    authDomain: "taqwa-property-41353.firebaseapp.com",
-    databaseURL: "https://taqwa-property-41353-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "taqwa-property-41353",
-    storageBucket: "taqwa-property-41353.firebasestorage.app",
-    messagingSenderId: "287655809647",
-    appId: "1:287655809647:web:598c88721282d8ae9b739a",
-    measurementId: "G-7WTLSZ99TV"
-};
-
-// Initialize Firebase
-const firebaseApp = initializeApp(firebaseConfig);
-const db = getDatabase(firebaseApp);
-console.log("Firebase Connected Successfully");
-
-// --- DOM ELEMENTS ---
 const app = document.getElementById("app");
 const userInfo = document.getElementById("userInfo");
 const userNameSpan = document.getElementById("userName");
 
-if (!app) {
-    alert("ERROR: HTML <div id='app'> not found!");
-    throw new Error("DOM Element Missing");
-}
-
-// --- BACKEND CLASS (FIREBASE ONLY) ---
+// --- MOCK DATABASE & BACKEND ---
+// Initializes dummy data if not present
 class Backend {
-    
-    // Helper to get data from Firebase
-    async _fb_get(path) {
-        const snapshot = await get(ref(db, path));
-        if (snapshot.exists()) {
-            return snapshot.val();
+    constructor() {
+        this.initData();
+    }
+
+    initData() {
+        if (!localStorage.getItem('taqwa_members')) {
+            const initialMembers = [
+                { 
+                    memberId: '100', 
+                    name: 'Admin User', 
+                    mobile: '01700000000', 
+                    password: '123', 
+                    role: 'Admin', 
+                    monthlyFee: 0, 
+                    joinDate: '2023-01-01' 
+                },
+                { 
+                    memberId: '101', 
+                    name: 'Abdul Karim', 
+                    mobile: '01711111111', 
+                    password: '123', 
+                    role: 'Member', 
+                    monthlyFee: 5000, 
+                    joinDate: '2023-05-15' 
+                },
+                { 
+                    memberId: '102', 
+                    name: 'Rahim Uddin', 
+                    mobile: '01822222222', 
+                    password: '123', 
+                    role: 'Member', 
+                    monthlyFee: 10000, 
+                    joinDate: '2023-06-20' 
+                }
+            ];
+            localStorage.setItem('taqwa_members', JSON.stringify(initialMembers));
         }
-        return null; // Return null if data doesn't exist
+
+        if (!localStorage.getItem('taqwa_collections')) {
+            const initialCollections = [
+                { id: 1, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-08-01', month: 'August 2023', status: 'Approved' },
+                { id: 2, memberId: '101', memberName: 'Abdul Karim', amount: 5000, date: '2023-09-05', month: 'September 2023', status: 'Approved' },
+                { id: 3, memberId: '102', memberName: 'Rahim Uddin', amount: 10000, date: '2023-09-10', month: 'September 2023', status: 'Approved' }
+            ];
+            localStorage.setItem('taqwa_collections', JSON.stringify(initialCollections));
+        }
+
+        if (!localStorage.getItem('taqwa_investments')) {
+            const initialInvestments = [
+                { id: 1, title: 'Land Purchase - Sector 5', amount: 50000, date: '2023-07-10' }
+            ];
+            localStorage.setItem('taqwa_investments', JSON.stringify(initialInvestments));
+        }
+
+        if (!localStorage.getItem('taqwa_funds')) {
+            const initialFunds = {
+                englishFund: 25000
+            };
+            localStorage.setItem('taqwa_funds', JSON.stringify(initialFunds));
+        }
+
+        if (!localStorage.getItem('taqwa_notifications')) {
+            localStorage.setItem('taqwa_notifications', JSON.stringify([]));
+        }
     }
 
-    // Helper to push data to Firebase
-    async _fb_push(path, data) {
-        const newRef = push(ref(db, path));
-        await set(newRef, data);
-        return data;
+    // Simulate API delay
+    async delay(ms = 300) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    // Helper to set data at specific path
-    async _fb_set(path, data) {
-        await set(ref(db, path), data);
-        return data;
+    getMembers() {
+        return JSON.parse(localStorage.getItem('taqwa_members') || '[]');
     }
 
-    // --- PUBLIC METHODS ---
-
-    async getMembers() {
-        const data = await this._fb_get('members');
-        // Firebase returns an object of objects, we convert to array
-        return data ? Object.values(data) : [];
+    getCollections() {
+        return JSON.parse(localStorage.getItem('taqwa_collections') || '[]');
     }
 
-    async getCollections() {
-        const data = await this._fb_get('collections');
-        return data ? Object.values(data) : [];
+    getInvestments() {
+        return JSON.parse(localStorage.getItem('taqwa_investments') || '[]');
     }
 
-    async getInvestments() {
-        const data = await this._fb_get('investments');
-        return data ? Object.values(data) : [];
+    getFunds() {
+        return JSON.parse(localStorage.getItem('taqwa_funds') || '{"englishFund": 0}');
     }
 
-    async getFunds() {
-        const data = await this._fb_get('funds');
-        // Return default object if funds don't exist yet
-        return data || { englishFund: 0 };
-    }
-
-    async getNotifications() {
-        const data = await this._fb_get('notifications');
-        return data ? Object.values(data) : [];
+    getNotifications() {
+        return JSON.parse(localStorage.getItem('taqwa_notifications') || '[]');
     }
 
     async login(memberId, mobile) {
-        // Hardcoded Admin Login (Optional)
-        if (memberId === '100' && mobile === '01700000000') {
-            return { memberId: '100', name: 'Admin User', role: 'Admin' };
-        }
-
-        // Fetch members from Firebase
-        const members = await this.getMembers();
+        await this.delay();
+        const members = this.getMembers();
         const user = members.find(m => m.memberId === memberId && m.mobile === mobile);
-
+        
         if (user) {
             return { status: 'success', ...user };
         } else {
@@ -108,139 +114,150 @@ class Backend {
     }
 
     async getDashboardData() {
-        const membersList = await this.getMembers();
-        const members = membersList.filter(m => m.role !== 'Admin');
-        const collectionsList = await this.getCollections();
-        const collections = collectionsList.filter(c => c.status === 'Approved');
-        const investments = await this.getInvestments();
-        const funds = await this.getFunds();
-
-        const totalDeposit = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
-        const totalInvested = investments.reduce((s, i) => s + parseInt(i.amount || 0), 0);
+        await this.delay();
+        const members = this.getMembers().filter(m => m.role !== 'Admin');
+        const collections = this.getCollections().filter(c => c.status === 'Approved');
+        const investments = this.getInvestments();
+        const funds = this.getFunds();
+        
+        const totalDeposit = collections.reduce((sum, c) => sum + parseInt(c.amount), 0);
+        const totalInvested = investments.reduce((sum, i) => sum + parseInt(i.amount), 0);
         const englishFund = parseInt(funds.englishFund || 0);
         const availableBalance = (totalDeposit + englishFund) - totalInvested;
-
+        
         const currentMonth = new Date().toLocaleString('default', { month: 'long', year: 'numeric' });
-        const thisMonthDeposit = collections.filter(c => c.month === currentMonth).reduce((s, c) => s + parseInt(c.amount || 0), 0);
+        const thisMonthDeposit = collections
+            .filter(c => c.month === currentMonth)
+            .reduce((sum, c) => sum + parseInt(c.amount), 0);
 
-        return { 
-            totalMembers: members.length, 
-            totalDeposit, 
-            totalInvested, 
-            englishFund, 
-            availableBalance,
-            thisMonthDeposit
+        return {
+            totalMembers: members.length,
+            totalDeposit: totalDeposit,
+            totalInvested: totalInvested,
+            englishFund: englishFund,
+            availableBalance: availableBalance,
+            thisMonthDeposit: thisMonthDeposit
         };
     }
 
     async saveCollection(collectionData) {
-        // 1. Find member to get the name
-        const members = await this.getMembers();
+        await this.delay();
+        const members = this.getMembers();
         const member = members.find(m => m.memberId === collectionData.memberId);
         
-        if (!member) {
-            throw new Error('Member ID not found');
-        }
+        if (!member) throw new Error('Member ID not found');
 
-        // 2. Prepare data
+        const collections = this.getCollections();
         const newCollection = {
-            id: Date.now(), // Simple ID generation
+            id: Date.now(),
             memberName: member.name,
             date: new Date().toISOString().split('T')[0],
             status: collectionData.status || 'Approved',
             ...collectionData
         };
-
-        // 3. Push to Firebase
-        await this._fb_push('collections', newCollection);
+        
+        collections.push(newCollection);
+        localStorage.setItem('taqwa_collections', JSON.stringify(collections));
         return { success: true, collection: newCollection };
     }
 
     async addMember(memberData) {
-        const members = await this.getMembers();
+        await this.delay();
+        const members = this.getMembers();
         if (members.find(m => m.memberId === memberData.memberId)) {
             throw new Error('Member ID already exists');
         }
-
-        // Save under members/{memberId} in Firebase
-        await this._fb_set(`members/${memberData.memberId}`, memberData);
+        members.push(memberData);
+        localStorage.setItem('taqwa_members', JSON.stringify(members));
         return { success: true };
     }
 
     async saveInvestment(title, amount) {
-        const inv = { 
-            id: Date.now(), 
-            title, 
-            amount: parseInt(amount), 
-            date: new Date().toISOString().split('T')[0] 
+        await this.delay();
+        const investments = this.getInvestments();
+        const newInvestment = {
+            id: Date.now(),
+            title,
+            amount,
+            date: new Date().toISOString().split('T')[0]
         };
-        await this._fb_push('investments', inv);
+        investments.push(newInvestment);
+        localStorage.setItem('taqwa_investments', JSON.stringify(investments));
         return { success: true };
     }
 
     async updateEnglishFund(amount) {
-        // Validation to prevent NaN error
-        const parsedAmount = parseInt(amount);
-        const finalAmount = isNaN(parsedAmount) ? 0 : parsedAmount;
-
-        await this._fb_set('funds/englishFund', finalAmount);
+        await this.delay();
+        const funds = this.getFunds();
+        funds.englishFund = parseInt(amount);
+        localStorage.setItem('taqwa_funds', JSON.stringify(funds));
         return { success: true };
     }
 
     async sendNotification(message) {
-        const notif = { 
-            id: Date.now(), 
-            message, 
-            date: new Date().toLocaleString() 
-        };
-        await this._fb_push('notifications', notif);
+        await this.delay();
+        const notifications = this.getNotifications();
+        notifications.push({
+            id: Date.now(),
+            message,
+            date: new Date().toLocaleString()
+        });
+        localStorage.setItem('taqwa_notifications', JSON.stringify(notifications));
         return { success: true };
     }
 
     async getMemberDue(memberId) {
-        const members = await this.getMembers();
+        await this.delay();
+        const members = this.getMembers();
         const member = members.find(m => m.memberId === memberId);
+        if (!member) throw new Error('Member not found');
+
+        const collections = this.getCollections().filter(c => c.memberId === memberId);
+        const totalPaid = collections.reduce((sum, c) => sum + parseInt(c.amount), 0);
         
-        if (!member) return { paid: 0, due: 0 };
-
-        const collections = (await this.getCollections()).filter(c => c.memberId === memberId && c.status === 'Approved');
-        const totalPaid = collections.reduce((s, c) => s + parseInt(c.amount || 0), 0);
-
+        // Simple due calculation: (Months joined * Fee) - Paid
+        // This is a simplified logic for the demo
         const joinDate = new Date(member.joinDate);
         const now = new Date();
         const monthsJoined = (now.getFullYear() - joinDate.getFullYear()) * 12 + (now.getMonth() - joinDate.getMonth()) + 1;
-        const totalExpected = monthsJoined * (member.monthlyFee || 0);
-
-        return { 
-            paid: totalPaid, 
-            due: Math.max(0, totalExpected - totalPaid) 
+        const totalExpected = monthsJoined * member.monthlyFee;
+        
+        return {
+            paid: totalPaid,
+            due: Math.max(0, totalExpected - totalPaid)
         };
     }
 
     async getCollectionById(id) {
-        const cols = await this.getCollections();
-        return cols.find(c => c.id === parseInt(id));
+        await this.delay();
+        const collections = this.getCollections();
+        return collections.find(c => c.id === parseInt(id));
     }
 
     async getMemberCollections(memberId) {
-        const cols = await this.getCollections();
-        return cols.filter(c => c.memberId === memberId);
+        await this.delay();
+        return this.getCollections().filter(c => c.memberId === memberId);
     }
 
     async getAllMembers() {
+        await this.delay();
         return this.getMembers();
     }
 
     async getMemberProfile(memberId) {
-        const member = (await this.getMembers()).find(m => m.memberId === memberId);
+        await this.delay();
+        const member = this.getMembers().find(m => m.memberId === memberId);
         if (!member) return null;
 
-        const due = await this.getMemberDue(memberId);
-        return { ...member, totalPaid: due.paid, totalDue: due.due };
+        const dueData = await this.getMemberDue(memberId);
+        return {
+            ...member,
+            totalPaid: dueData.paid,
+            totalDue: dueData.due
+        };
     }
 }
 
-// Instantiate Backend
 const backend = new Backend();
 
 // --- FRONTEND LOGIC ---
@@ -249,60 +266,21 @@ const backend = new Backend();
 let currentUser = null;
 let activeTab = 'dashboard';
 
-// Tab Switcher
-window.switchTab = function (tabId) {
+function switchTab(tabId) {
     activeTab = tabId;
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    const el = document.getElementById(tabId);
-    if (el) el.classList.add('active');
-    const activeBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-};
+    const tabs = document.querySelectorAll('.tab-content');
+    const btns = document.querySelectorAll('.tab-btn');
+    
+    tabs.forEach(tab => tab.classList.remove('active'));
+    btns.forEach(btn => btn.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+}
 
-// Login / Logout
-window.login = async function () {
-    const midVal = document.getElementById("mid").value.trim();
-    const mobVal = document.getElementById("mob").value.trim();
-    const msgEl = document.getElementById("msg");
-
-    if (!midVal || !mobVal) {
-        msgEl.innerText = "Please fill in all fields";
-        msgEl.style.display = "block";
-        return;
-    }
-
-    try {
-        const user = await backend.login(midVal, mobVal);
-        currentUser = user;
-        if (userNameSpan) userNameSpan.innerText = user.name;
-        if (userInfo) userInfo.style.display = 'flex';
-
-        if (user.role === "Admin") {
-            await renderAdmin();
-        } else {
-            await renderMember(user.memberId);
-        }
-    } catch (err) {
-        if (msgEl) {
-            msgEl.innerText = err.message || String(err);
-            msgEl.style.display = "block";
-        } else {
-            alert(err.message || String(err));
-        }
-    }
-};
-
-window.logout = function () {
-    currentUser = null;
-    if (userInfo) userInfo.style.display = 'none';
-    renderLogin();
-};
-
-// Render Login
+// Render Functions
 function renderLogin() {
-    if (userInfo) userInfo.style.display = 'none';
-    if (!app) return;
+    userInfo.style.display = 'none';
     app.innerHTML = `
     <div class="card" style="max-width: 400px; margin: 40px auto; border-top: 5px solid var(--primary);">
         <div class="text-center">
@@ -323,20 +301,55 @@ function renderLogin() {
             <input id="mob" placeholder="Enter mobile number" type="tel">
         </div>
         <button onclick="login()"><i class="fa-solid fa-right-to-bracket"></i> Login Securely</button>
-        <div id="msg" class="error" style="display:none;"></div>
-
+        <div id="msg" class="error"></div>
+        
         <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid #eee; font-size: 0.8rem; color: #888;" class="text-center">
             <p>Demo Admin: 100 / 01700000000</p>
-            <p>Note: You must add members via Firebase Console first or use Admin account to add them.</p>
+            <p>Demo Member: 101 / 01711111111</p>
         </div>
     </div>`;
+}
+
+async function login() {
+    const midVal = document.getElementById("mid").value.trim();
+    const mobVal = document.getElementById("mob").value.trim();
+    const msgEl = document.getElementById("msg");
+
+    if (!midVal || !mobVal) {
+        msgEl.innerText = "Please fill in all fields";
+        msgEl.style.display = "block";
+        return;
+    }
+
+    try {
+        const user = await backend.login(midVal, mobVal);
+        currentUser = user;
+        
+        // Update Header
+        userNameSpan.innerText = user.name;
+        userInfo.style.display = 'flex';
+
+        if (user.role === "Admin") {
+            await renderAdmin();
+        } else {
+            await renderMember(user.memberId);
+        }
+    } catch (err) {
+        msgEl.innerText = err.message;
+        msgEl.style.display = "block";
+    }
+}
+
+function logout() {
+    currentUser = null;
+    renderLogin();
 }
 
 // --- ADMIN VIEWS ---
 
 async function renderAdmin() {
     const data = await backend.getDashboardData();
-
+    
     app.innerHTML = `
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchTab('dashboard')"><i class="fa-solid fa-chart-line"></i> Dashboard</button>
@@ -354,19 +367,19 @@ async function renderAdmin() {
                 <div class="stat-label">Total Members</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">Tk. ${Number(data.totalDeposit || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${data.totalDeposit.toLocaleString()}</div>
                 <div class="stat-label">Total Deposits</div>
             </div>
             <div class="stat-item invested">
-                <div class="stat-value">Tk. ${Number(data.totalInvested || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${data.totalInvested.toLocaleString()}</div>
                 <div class="stat-label">Total Invested</div>
             </div>
             <div class="stat-item fund">
-                <div class="stat-value">Tk. ${Number(data.englishFund || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${data.englishFund.toLocaleString()}</div>
                 <div class="stat-label">English Fund</div>
             </div>
             <div class="stat-item balance">
-                <div class="stat-value">Tk. ${Number(data.availableBalance || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${data.availableBalance.toLocaleString()}</div>
                 <div class="stat-label">Available Cash</div>
             </div>
         </div>
@@ -491,7 +504,7 @@ async function renderAdmin() {
             </div>
             <div class="form-group">
                 <label>English Fund Amount (Tk)</label>
-                <input id="engFund" type="number" value="${Number(data.englishFund || 0)}">
+                <input id="engFund" type="number" value="${data.englishFund}">
             </div>
             <button onclick="updateFund()"><i class="fa-solid fa-save"></i> Update English Fund</button>
         </div>
@@ -529,8 +542,6 @@ async function renderAdmin() {
     loadMemberList();
 }
 
-// --- ADMIN ACTIONS ---
-
 async function addNewMember() {
     const mid = document.getElementById("newMid").value.trim();
     const name = document.getElementById("newName").value.trim();
@@ -545,7 +556,7 @@ async function addNewMember() {
     try {
         await backend.addMember({
             memberId: mid,
-            name,
+            name: name,
             mobile: mob,
             monthlyFee: parseInt(fee),
             role: 'Member',
@@ -554,7 +565,7 @@ async function addNewMember() {
         alert("Member added successfully!");
         renderAdmin();
     } catch (err) {
-        alert(err.message || String(err));
+        alert(err.message);
     }
 }
 
@@ -583,17 +594,18 @@ async function sendNotification() {
 }
 
 async function saveCollection() {
-    const mid = (document.getElementById("cmid") || {}).value?.trim();
-    const amt = (document.getElementById("amt") || {}).value?.trim();
-    const month = (document.getElementById("month") || {}).value?.trim();
+    const mid = document.getElementById("cmid").value.trim();
+    const amt = document.getElementById("amt").value.trim();
+    const month = document.getElementById("month").value.trim();
     const sMsg = document.getElementById("amsg");
     const eMsg = document.getElementById("aerr");
 
-    if (sMsg) { sMsg.style.display = 'none'; }
-    if (eMsg) { eMsg.style.display = 'none'; }
+    sMsg.style.display = 'none';
+    eMsg.style.display = 'none';
 
     if (!mid || !amt) {
-        if (eMsg) { eMsg.innerText = "Member ID and Amount are required"; eMsg.style.display = 'block'; }
+        eMsg.innerText = "Member ID and Amount are required";
+        eMsg.style.display = 'block';
         return;
     }
 
@@ -602,17 +614,18 @@ async function saveCollection() {
             memberId: mid,
             amount: parseInt(amt),
             month: month,
-            type: document.getElementById("depType")?.value,
-            gateway: document.getElementById("gateway")?.value,
-            bankName: document.getElementById("bankName")?.value,
-            trxId: document.getElementById("trxId")?.value,
-            status: 'Approved'
+            type: document.getElementById("depType").value,
+            gateway: document.getElementById("gateway").value,
+            bankName: document.getElementById("bankName").value,
+            trxId: document.getElementById("trxId").value
         });
-        if (sMsg) { sMsg.innerText = `Successfully collected Tk. ${amt} from Member ${mid}`; sMsg.style.display = 'block'; }
-        if (result && result.collection) showReceipt(result.collection);
-        if (document.getElementById("cmid")) document.getElementById("cmid").value = "";
+        sMsg.innerText = `Successfully collected Tk. ${amt} from Member ${mid}`;
+        sMsg.style.display = 'block';
+        showReceipt(result.collection);
+        document.getElementById("cmid").value = "";
     } catch (err) {
-        if (eMsg) { eMsg.innerText = err.message || String(err); eMsg.style.display = 'block'; }
+        eMsg.innerText = err.message;
+        eMsg.style.display = 'block';
     }
 }
 
@@ -622,7 +635,7 @@ async function renderMember(memberId) {
     const m = await backend.getMemberProfile(memberId);
     const d = await backend.getMemberDue(memberId);
     const notifications = await backend.getNotifications();
-
+    
     app.innerHTML = `
     <div class="tabs-container">
         <button class="tab-btn active" onclick="switchTab('overview')"><i class="fa-solid fa-house-user"></i> Overview</button>
@@ -639,13 +652,13 @@ async function renderMember(memberId) {
             </div>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                 <div>
-                    <p><b>Name:</b> ${m?.name || ''}</p>
-                    <p><b>Member ID:</b> ${m?.memberId || ''}</p>
-                    <p><b>Mobile:</b> ${m?.mobile || ''}</p>
+                    <p><b>Name:</b> ${m.name}</p>
+                    <p><b>Member ID:</b> ${m.memberId}</p>
+                    <p><b>Mobile:</b> ${m.mobile}</p>
                 </div>
                 <div>
-                    <p><b>Join Date:</b> ${m?.joinDate || ''}</p>
-                    <p><b>Monthly Fee:</b> Tk. ${m?.monthlyFee || 0}</p>
+                    <p><b>Join Date:</b> ${m.joinDate}</p>
+                    <p><b>Monthly Fee:</b> Tk. ${m.monthlyFee}</p>
                     <p><b>Status:</b> <span class="badge badge-approved">Active</span></p>
                 </div>
             </div>
@@ -653,11 +666,11 @@ async function renderMember(memberId) {
 
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-value">Tk. ${Number(d.paid || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${d.paid.toLocaleString()}</div>
                 <div class="stat-label">Total Paid</div>
             </div>
             <div class="stat-item" style="border-top-color: ${d.due > 0 ? '#dc3545' : '#198754'}">
-                <div class="stat-value" style="color: ${d.due > 0 ? '#dc3545' : '#198754'}">Tk. ${Number(d.due || 0).toLocaleString()}</div>
+                <div class="stat-value" style="color: ${d.due > 0 ? '#dc3545' : '#198754'}">Tk. ${d.due.toLocaleString()}</div>
                 <div class="stat-label">Total Due</div>
             </div>
         </div>
@@ -681,7 +694,7 @@ async function renderMember(memberId) {
                 <h3><i class="fa-solid fa-paper-plane"></i> Submit Monthly Deposit</h3>
             </div>
             <p style="font-size: 0.85rem; color: #666; margin-bottom: 20px;">Submit your monthly fee for admin approval.</p>
-
+            
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                 <div class="form-group">
                     <label>Month</label>
@@ -689,7 +702,7 @@ async function renderMember(memberId) {
                 </div>
                 <div class="form-group">
                     <label>Amount (Tk)</label>
-                    <input id="depAmt" type="number" value="${m?.monthlyFee || 0}">
+                    <input id="depAmt" type="number" value="${m.monthlyFee}">
                 </div>
             </div>
 
@@ -755,11 +768,14 @@ async function submitDeposit() {
     const trxId = document.getElementById("depTrxId").value;
     const note = document.getElementById("depNote").value;
     const msg = document.getElementById("depMsg");
-
-    if (msg) { msg.style.display = 'none'; msg.className = 'success'; }
+    
+    msg.style.display = 'none';
+    msg.className = "success";
 
     if (!amt) {
-        if (msg) { msg.innerText = "Please enter amount"; msg.className = "error"; msg.style.display = "block"; }
+        msg.innerText = "Please enter amount";
+        msg.className = "error";
+        msg.style.display = "block";
         return;
     }
 
@@ -777,52 +793,50 @@ async function submitDeposit() {
             status: 'Pending',
             type: 'Monthly Fee'
         });
-        if (msg) { msg.innerText = "Deposit submitted! Waiting for admin approval."; msg.style.display = "block"; msg.className = "success"; }
-
+        msg.innerText = "Deposit submitted! Waiting for admin approval.";
+        msg.style.display = "block";
+        
         // Clear fields
-        if (document.getElementById("depTrxId")) document.getElementById("depTrxId").value = "";
-        if (document.getElementById("depNote")) document.getElementById("depNote").value = "";
+        document.getElementById("depTrxId").value = "";
+        document.getElementById("depNote").value = "";
     } catch (err) {
-        if (msg) { msg.innerText = err.message || String(err); msg.className = "error"; msg.style.display = "block"; }
+        msg.innerText = err.message;
+        msg.className = "error";
+        msg.style.display = "block";
     }
 }
 
-// --- SHARED HELPERS ---
-
-async function lookupMemberName(id, displayId) {
-    if(!id) {
-        document.getElementById(displayId).innerText = "";
-        return;
-    }
-    
-    try {
-        const members = await backend.getMembers();
-        const member = members.find(m => m.memberId === id);
-        const display = document.getElementById(displayId);
-        if (!display) return;
-        
+function lookupMemberName(id, displayId) {
+    const members = JSON.parse(localStorage.getItem('taqwa_members') || '[]');
+    const member = members.find(m => m.memberId === id);
+    const display = document.getElementById(displayId);
+    if (display) {
         if (member) {
             display.innerText = `Member: ${member.name}`;
             display.style.color = 'var(--primary)';
         } else {
-            display.innerText = 'Member not found';
+            display.innerText = id ? 'Member not found' : '';
             display.style.color = '#dc3545';
         }
-    } catch (e) {
-        console.error(e);
     }
 }
 
 function toggleBankField(val, targetId) {
     const el = document.getElementById(targetId);
-    if (!el) return;
-    el.style.display = (val === 'Bank Transfer') ? 'block' : 'none';
+    if (el) {
+        if (val === 'Bank Transfer') {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
+    }
 }
 
 async function loadNotifications() {
     const list = document.getElementById("notifList");
     if (!list) return;
     const notifications = await backend.getNotifications();
+    
     let html = '<div class="notification-list">';
     notifications.reverse().forEach(n => {
         html += `
@@ -833,6 +847,8 @@ async function loadNotifications() {
     });
     list.innerHTML = html + '</div>';
 }
+
+// --- SHARED UI HELPERS ---
 
 function showReceipt(data) {
     const modal = document.createElement('div');
@@ -848,7 +864,7 @@ function showReceipt(data) {
                 <p style="font-size: 0.75rem; color: #888; text-transform: uppercase; letter-spacing: 1px;">Official Record</p>
             </div>
             <div class="receipt-body">
-                <div class="receipt-row"><span>Receipt ID:</span><b>#${String(data.id || '').slice(-6)}</b></div>
+                <div class="receipt-row"><span>Receipt ID:</span><b>#${data.id.toString().slice(-6)}</b></div>
                 <div class="receipt-row"><span>Date:</span><b>${data.date}</b></div>
                 <hr style="border:none; border-top: 1px dashed #eee; margin: 15px 0;">
                 <div class="receipt-row"><span>Member Name:</span><b>${data.memberName || 'N/A'}</b></div>
@@ -856,7 +872,7 @@ function showReceipt(data) {
                 <div class="receipt-row"><span>Payment For:</span><b>${data.month}</b></div>
                 <div class="receipt-row" style="margin-top: 20px; font-size: 1.3rem; color: var(--primary);">
                     <span>Amount Paid:</span>
-                    <b>Tk. ${Number(data.amount || 0).toLocaleString()}</b>
+                    <b>Tk. ${data.amount.toLocaleString()}</b>
                 </div>
                 <div class="receipt-row" style="margin-top: 5px;">
                     <span>Status:</span>
@@ -874,7 +890,8 @@ function showReceipt(data) {
             <button onclick="document.getElementById('receipt-modal').remove()" style="background:none; color:#999; position:absolute; top:15px; right:15px; width:auto; margin:0; padding:5px;">
                 <i class="fa-solid fa-times fa-lg"></i>
             </button>
-        </div>`;
+        </div>
+    `;
     document.body.appendChild(modal);
 }
 
@@ -901,34 +918,30 @@ async function loadMemberList() {
             <td>${m.name}</td>
             <td>${m.mobile}</td>
             <td>Tk. ${m.monthlyFee}</td>
-            <td><span class="badge badge-${(m.role || '').toLowerCase()}">${m.role}</span></td>
+            <td><span class="badge badge-${m.role.toLowerCase()}">${m.role}</span></td>
         </tr>`;
     });
-    const container = document.getElementById("memberList");
-    if (container) container.innerHTML = html + `</tbody></table>`;
+    document.getElementById("memberList").innerHTML = html + `</tbody></table>`;
 }
 
 async function openMemberProfile(memberId) {
     const m = await backend.getMemberProfile(memberId);
     const collections = await backend.getMemberCollections(memberId);
-
+    
     let histHtml = '<div class="history-list">';
-    collections.slice().reverse().forEach(r => {
+    collections.reverse().forEach(r => {
         histHtml += `
         <div class="history-item" onclick="viewReceipt('${r.id}')">
             <div class="history-info">
                 <h5>${r.month}</h5>
                 <div class="history-date">${r.date}</div>
             </div>
-            <div class="history-amount">Tk. ${Number(r.amount || 0).toLocaleString()}</div>
+            <div class="history-amount">Tk. ${r.amount.toLocaleString()}</div>
         </div>`;
     });
     histHtml += '</div>';
 
-    const memberListEl = document.getElementById("memberList");
-    if (!memberListEl) return;
-
-    memberListEl.innerHTML = `
+    document.getElementById("memberList").innerHTML = `
     <div class="card" style="border-left: 5px solid var(--primary);">
         <div class="card-header">
             <h3>Member Profile: ${m.name}</h3>
@@ -936,11 +949,11 @@ async function openMemberProfile(memberId) {
         </div>
         <div class="stats-grid">
             <div class="stat-item">
-                <div class="stat-value">Tk. ${Number(m.totalPaid || 0).toLocaleString()}</div>
+                <div class="stat-value">Tk. ${m.totalPaid.toLocaleString()}</div>
                 <div class="stat-label">Total Paid</div>
             </div>
             <div class="stat-item" style="border-top-color: ${m.totalDue > 0 ? '#dc3545' : '#198754'}">
-                <div class="stat-value" style="color: ${m.totalDue > 0 ? '#dc3545' : '#198754'}">Tk. ${Number(m.totalDue || 0).toLocaleString()}</div>
+                <div class="stat-value" style="color: ${m.totalDue > 0 ? '#dc3545' : '#198754'}">Tk. ${m.totalDue.toLocaleString()}</div>
                 <div class="stat-label">Current Due</div>
             </div>
         </div>
@@ -953,29 +966,26 @@ async function openMemberProfile(memberId) {
 
 async function loadMemberHistory(mid) {
     const rows = await backend.getMemberCollections(mid);
-    const histEl = document.getElementById("hist");
-    if (!histEl) return;
-    if (!rows || !rows.length) {
-        histEl.innerHTML = "<p class='text-center' style='color:#888; padding:20px;'>No payments found.</p>";
+    if (!rows.length) {
+        document.getElementById("hist").innerHTML = "<p class='text-center' style='color:#888; padding:20px;'>No payments found.</p>";
         return;
     }
     let html = '<div class="history-list">';
-    rows.slice().reverse().forEach(r => {
+    rows.reverse().forEach(r => {
         html += `
         <div class="history-item" onclick="viewReceipt('${r.id}')">
             <div class="history-info">
                 <h5>${r.month}</h5>
                 <div class="history-date">${r.date}</div>
             </div>
-            <div class="history-amount">Tk. ${Number(r.amount || 0).toLocaleString()}</div>
+            <div class="history-amount">Tk. ${r.amount.toLocaleString()}</div>
         </div>`;
     });
-    histEl.innerHTML = html + '</div>';
+    document.getElementById("hist").innerHTML = html + '</div>';
 }
 
-// Export helpers
 function exportToCSV(filename, rows) {
-    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.map(x => `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const csvContent = "data:text/csv;charset=utf-8," + rows.map(e => e.join(",")).join("\n");
     const link = document.createElement("a");
     link.setAttribute("href", encodeURI(csvContent));
     link.setAttribute("download", filename);
@@ -995,21 +1005,6 @@ async function exportCollections() {
     const rows = [["ID", "Member", "Amount", "Month", "Date", "Status"], ...collections.map(c => [c.id, c.memberName, c.amount, c.month, c.date, c.status])];
     exportToCSV("collections.csv", rows);
 }
-
-// --- GLOBAL SCOPE ATTACHMENT ---
-window.addNewMember = addNewMember;
-window.updateFund = updateFund;
-window.saveInvestment = saveInvestment;
-window.sendNotification = sendNotification;
-window.saveCollection = saveCollection;
-window.lookupMemberName = lookupMemberName;
-window.toggleBankField = toggleBankField;
-window.viewReceipt = viewReceipt;
-window.sendWhatsApp = sendWhatsApp;
-window.openMemberProfile = openMemberProfile;
-window.submitDeposit = submitDeposit;
-window.exportMembers = exportMembers;
-window.exportCollections = exportCollections;
 
 // Initialize App
 renderLogin();
