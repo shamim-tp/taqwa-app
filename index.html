@@ -1,29 +1,4251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Taqwa Property BD - Management System</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
-    <div class="app-container">
-        <header>
-            <div class="logo">
-                <i class="fa-solid fa-building-user"></i> Taqwa Property BD
-            </div>
-            <div id="userInfo" class="user-info" style="display: none;">
-                <span id="userName">User</span>
-                <button onclick="logout()" class="logout-btn"><i class="fa-solid fa-right-from-bracket"></i></button>
-            </div>
-        </header>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IMS ERP V5 Ultra Advanced (LocalStorage)</title>
 
-        <main id="app">
-            <!-- Dynamic Content Loaded Here -->
-        </main>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#0f1a2d;
+      --panel2:#111f36;
+      --card:#0f223d;
+      --text:#e7f0ff;
+      --muted:#9db0d1;
+      --line:rgba(255,255,255,0.08);
+      --accent:#3b82f6;
+      --accent2:#22c55e;
+      --danger:#ef4444;
+      --warning:#f59e0b;
+      --info:#06b6d4;
+      --shadow:0 12px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:22px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{
+      font-family:var(--font);
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(59,130,246,.25), transparent 55%),
+                  radial-gradient(900px 500px at 90% 20%, rgba(34,197,94,.18), transparent 60%),
+                  radial-gradient(900px 500px at 40% 90%, rgba(6,182,212,.18), transparent 60%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    a{color:inherit;text-decoration:none;}
+    button{cursor:pointer;border:none;outline:none;}
+    input, select, textarea{
+      width:100%;
+      padding:12px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical;}
+    label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px;}
+    .row{display:grid;gap:14px;}
+    .row-2{grid-template-columns:repeat(2,1fr);}
+    .row-3{grid-template-columns:repeat(3,1fr);}
+    .row-4{grid-template-columns:repeat(4,1fr);}
+    @media(max-width:980px){
+      .row-4,.row-3,.row-2{grid-template-columns:1fr;}
+    }
+
+    /* Layout */
+    .app{
+      display:grid;
+      grid-template-columns:290px 1fr;
+      min-height:100vh;
+    }
+    @media(max-width:980px){
+      .app{grid-template-columns:1fr;}
+    }
+
+    /* Sidebar */
+    .sidebar{
+      padding:18px;
+      border-right:1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15,26,45,.92), rgba(11,18,32,.92));
+      position:sticky;
+      top:0;
+      height:100vh;
+      overflow:auto;
+    }
+    @media(max-width:980px){
+      .sidebar{position:relative;height:auto;}
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:14px 14px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      margin-bottom:14px;
+    }
+    .brand h2{font-size:15px;}
+    .badge{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(59,130,246,.18);
+      border:1px solid rgba(59,130,246,.4);
+      color:#cfe3ff;
+    }
+
+    .userBox{
+      padding:14px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      margin-bottom:14px;
+    }
+    .userBox .name{font-weight:700;font-size:14px;margin-bottom:6px;}
+    .userBox .role{font-size:12px;color:var(--muted);}
+    .userBox .mini{
+      margin-top:10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .chip{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      color:var(--muted);
+    }
+
+    .navTitle{
+      font-size:11px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin:14px 4px 10px;
+    }
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .nav button{
+      text-align:left;
+      padding:12px 12px;
+      border-radius:14px;
+      background:rgba(255,255,255,0.03);
+      border:1px solid var(--line);
+      color:var(--text);
+      transition:.2s;
+      font-size:13px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .nav button:hover{
+      transform:translateY(-1px);
+      border-color:rgba(59,130,246,.4);
+      background:rgba(59,130,246,.12);
+    }
+    .nav button.active{
+      background:linear-gradient(135deg, rgba(59,130,246,.22), rgba(6,182,212,.15));
+      border-color:rgba(59,130,246,.55);
+    }
+
+    .nav .count{
+      font-size:11px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      color:var(--muted);
+    }
+
+    .logoutBtn{
+      margin-top:14px;
+      width:100%;
+      padding:12px 14px;
+      border-radius:14px;
+      background:rgba(239,68,68,.12);
+      border:1px solid rgba(239,68,68,.35);
+      color:#ffd6d6;
+      font-weight:700;
+    }
+
+    /* Main */
+    .main{
+      padding:20px;
+    }
+
+    .topbar{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:16px;
+    }
+    .topbar h1{
+      font-size:18px;
+      font-weight:800;
+    }
+    .topbar p{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+    }
+    .rightTop{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .btn{
+      padding:11px 14px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      font-weight:700;
+      font-size:12px;
+      transition:.2s;
+    }
+    .btn:hover{transform:translateY(-1px);}
+    .btn.primary{
+      background:linear-gradient(135deg, rgba(59,130,246,.9), rgba(6,182,212,.8));
+      border-color:rgba(59,130,246,.45);
+    }
+    .btn.success{
+      background:linear-gradient(135deg, rgba(34,197,94,.85), rgba(6,182,212,.5));
+      border-color:rgba(34,197,94,.45);
+    }
+    .btn.danger{
+      background:rgba(239,68,68,.18);
+      border-color:rgba(239,68,68,.35);
+      color:#ffdada;
+    }
+    .btn.warn{
+      background:rgba(245,158,11,.18);
+      border-color:rgba(245,158,11,.35);
+      color:#ffe6c2;
+    }
+
+    /* Cards */
+    .gridCards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-bottom:14px;
+    }
+    @media(max-width:1200px){.gridCards{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:680px){.gridCards{grid-template-columns:1fr;}}
+    .card{
+      border-radius:var(--radius2);
+      padding:14px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      box-shadow:var(--shadow);
+      position:relative;
+      overflow:hidden;
+    }
+    .card .title{font-size:12px;color:var(--muted);margin-bottom:8px;}
+    .card .value{font-size:20px;font-weight:900;}
+    .card .sub{margin-top:6px;color:var(--muted);font-size:11px;}
+    .card .tag{
+      position:absolute;
+      top:12px;
+      right:12px;
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      color:var(--muted);
+    }
+
+    /* Panels */
+    .panel{
+      border-radius:var(--radius2);
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      box-shadow:var(--shadow);
+      padding:14px;
+      margin-bottom:14px;
+    }
+    .panelHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .panelHeader h3{font-size:14px;font-weight:900;}
+    .panelHeader p{font-size:12px;color:var(--muted);margin-top:4px;}
+    .panelTools{display:flex;gap:8px;flex-wrap:wrap;}
+
+    /* Table */
+    table{
+      width:100%;
+      border-collapse:collapse;
+      overflow:hidden;
+      border-radius:14px;
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid var(--line);
+      font-size:12px;
+      text-align:left;
+      vertical-align:top;
+    }
+    th{color:var(--muted);font-weight:800;font-size:11px;}
+    tr:hover td{background:rgba(59,130,246,.06);}
+
+    .status{
+      font-size:11px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      display:inline-block;
+      font-weight:800;
+    }
+    .st-pending{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.35);color:#ffe6c2;}
+    .st-approved{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.35);color:#caffdd;}
+    .st-rejected{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.35);color:#ffd2d2;}
+
+    .small{
+      font-size:11px;
+      color:var(--muted);
+    }
+
+    .twoCols{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:14px;
+    }
+    @media(max-width:1100px){.twoCols{grid-template-columns:1fr;}}
+
+    .modalWrap{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,.6);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999;
+      padding:18px;
+    }
+    .modal{
+      width:min(980px, 100%);
+      max-height:90vh;
+      overflow:auto;
+      border-radius:22px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,26,45,.95), rgba(11,18,32,.95));
+      box-shadow:0 18px 70px rgba(0,0,0,.6);
+      padding:16px;
+    }
+    .modalHead{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .modalHead h2{font-size:15px;font-weight:900;}
+    .modalHead p{font-size:12px;color:var(--muted);margin-top:6px;}
+    .closeX{
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.04);
+      color:var(--text);
+      font-weight:900;
+    }
+
+    .hr{
+      height:1px;
+      background:var(--line);
+      margin:10px 0;
+    }
+
+    .toastWrap{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:99999;
+    }
+    .toast{
+      width:320px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      box-shadow:0 18px 70px rgba(0,0,0,.55);
+      padding:12px;
+      animation: pop .18s ease-out;
+    }
+    @keyframes pop{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+    .toast .t1{font-weight:900;font-size:13px;}
+    .toast .t2{color:var(--muted);font-size:12px;margin-top:6px;}
+    .toast .t3{margin-top:8px;font-size:11px;color:var(--muted);}
+
+    .loginWrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+    }
+    .loginCard{
+      width:min(950px,100%);
+      border-radius:26px;
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, rgba(15,26,45,.92), rgba(11,18,32,.92));
+      box-shadow:0 18px 80px rgba(0,0,0,.7);
+      padding:16px;
+    }
+    .loginGrid{
+      display:grid;
+      grid-template-columns:1.2fr .8fr;
+      gap:14px;
+    }
+    @media(max-width:980px){.loginGrid{grid-template-columns:1fr;}}
+    .loginLeft{
+      border-radius:22px;
+      border:1px solid var(--line);
+      padding:16px;
+      background:linear-gradient(135deg, rgba(59,130,246,.18), rgba(6,182,212,.10));
+    }
+    .loginLeft h1{font-size:22px;font-weight:1000;}
+    .loginLeft p{color:var(--muted);margin-top:10px;font-size:13px;line-height:1.6;}
+    .loginRight{
+      border-radius:22px;
+      border:1px solid var(--line);
+      padding:16px;
+      background:rgba(255,255,255,0.03);
+    }
+
+    .tabs{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+    .tabs button{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      color:var(--text);
+      font-weight:900;
+      font-size:12px;
+    }
+    .tabs button.active{
+      background:rgba(59,130,246,.22);
+      border-color:rgba(59,130,246,.55);
+    }
+
+    .hint{
+      margin-top:10px;
+      padding:12px;
+      border-radius:16px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.02);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+
+    .filePreview{
+      margin-top:8px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .filePreview img{
+      width:100px;
+      height:100px;
+      object-fit:cover;
+      border-radius:16px;
+      border:1px solid var(--line);
+    }
+
+    .kpiBox{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+    }
+    .kpi{
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--line);
+      background:rgba(255,255,255,0.03);
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .footerNote{
+      text-align:center;
+      margin-top:12px;
+      font-size:11px;
+      color:var(--muted);
+    }
+
+  </style>
+</head>
+
+<body>
+
+<!-- TOAST -->
+<div class="toastWrap" id="toastWrap"></div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="loginWrap">
+  <div class="loginCard">
+    <div class="loginGrid">
+      <div class="loginLeft">
+        <h1>IMS ERP V5 Ultra Advanced</h1>
+        <p>
+          Professional Investment Management ERP System (Browser Based) <br/>
+          <b>LocalStorage Database</b> | Multi Admin | Member System | Investment Profit | Voucher & Expense
+        </p>
+
+        <div class="hint">
+          <b>Default Admin Login:</b><br/>
+          ID: <b>admin</b><br/>
+          Password: <b>admin123</b><br/><br/>
+          <b>Default Member Login:</b> (Demo)<br/>
+          ID: <b>M-1001</b><br/>
+          Password: <b>1234</b>
+        </div>
+
+        <div class="kpiBox">
+          <div class="kpi">✔ Multi Admin Role</div>
+          <div class="kpi">✔ Investment Profit System</div>
+          <div class="kpi">✔ Deposit Slip Upload</div>
+          <div class="kpi">✔ MR ID + Voucher ID</div>
+          <div class="kpi">✔ Auto Notifications</div>
+        </div>
+      </div>
+
+      <div class="loginRight">
+        <div class="tabs">
+          <button id="tabAdmin" class="active" onclick="switchLoginTab('admin')">Admin Login</button>
+          <button id="tabMember" onclick="switchLoginTab('member')">Member Login</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label id="loginIdLabel">Admin ID</label>
+            <input id="loginId" placeholder="Enter ID (admin / M-1001)" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="loginPass" type="password" placeholder="Enter Password" />
+          </div>
+
+          <button class="btn primary" onclick="doLogin()">Login</button>
+
+          <div class="hint">
+            🔒 This ERP runs fully offline. All data stored in browser LocalStorage.
+            <br/><br/>
+            ⚠️ If you clear browser data, all records will be deleted.
+          </div>
+        </div>
+
+        <div class="footerNote">
+          Version: <b>V5 Ultra Advanced ERP</b> | Developed for Business Investment System
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APP -->
+<div id="appPage" class="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div>
+        <h2>IMS ERP V5</h2>
+        <div class="small">Ultra Advanced Panel</div>
+      </div>
+      <div class="badge" id="systemMode">ADMIN</div>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+    <div class="userBox">
+      <div class="name" id="currentUserName">-</div>
+      <div class="role" id="currentUserRole">-</div>
+      <div class="mini">
+        <span class="chip" id="chipId">ID: -</span>
+        <span class="chip" id="chipStatus">Active</span>
+      </div>
+    </div>
+
+    <div class="navTitle">Navigation</div>
+    <div class="nav" id="sidebarNav"></div>
+
+    <button class="logoutBtn" onclick="logout()">Logout</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSubtitle">Welcome to IMS ERP V5 Ultra Advanced.</p>
+      </div>
+
+      <div class="rightTop">
+        <button class="btn" onclick="openModal('modalSystemTools')">System Tools</button>
+        <button class="btn primary" onclick="openModal('modalQuickAdd')">Quick Add</button>
+      </div>
+    </div>
+
+    <div id="pageContent"></div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modalWrap" id="modalQuickAdd">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>Quick Add</h2>
+        <p>Quick actions: Add Member, Add Investment, Add Expense, Send Notice</p>
+      </div>
+      <button class="closeX" onclick="closeModal('modalQuickAdd')">✕</button>
+    </div>
+
+    <div class="row row-2">
+      <button class="btn success" onclick="closeModal('modalQuickAdd'); go('admin_members')">➕ Add Member</button>
+      <button class="btn success" onclick="closeModal('modalQuickAdd'); go('admin_investments')">➕ Add Investment</button>
+      <button class="btn warn" onclick="closeModal('modalQuickAdd'); go('admin_expenses')">➕ Add Expense</button>
+      <button class="btn primary" onclick="closeModal('modalQuickAdd'); go('admin_notices')">📢 Send Notice</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="hint">
+      Quick Add is available for Admin role only. Members can submit deposit and view profile.
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalSystemTools">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>System Tools</h2>
+        <p>Backup/Restore, Reset Demo Data, Export JSON</p>
+      </div>
+      <button class="closeX" onclick="closeModal('modalSystemTools')">✕</button>
+    </div>
+
+    <div class="row row-2">
+      <button class="btn primary" onclick="exportJSON()">Export Backup JSON</button>
+      <button class="btn" onclick="importJSONPrompt()">Import Backup JSON</button>
+      <button class="btn warn" onclick="resetDemo()">Reset Demo Data</button>
+      <button class="btn danger" onclick="wipeAll()">Wipe All Data</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="hint">
+      ⚠️ Export JSON recommended every month.  
+      LocalStorage reset হলে সব ডেটা চলে যাবে।
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalViewer">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2 id="viewerTitle">Viewer</h2>
+        <p id="viewerSub">Details Preview</p>
+      </div>
+      <button class="closeX" onclick="closeModal('modalViewer')">✕</button>
+    </div>
+    <div id="viewerBody"></div>
+  </div>
+</div>
+
+
+<script>
+/* ============================================================
+   IMS ERP V5 ULTRA ADVANCED (LOCALSTORAGE)
+   Author: ChatGPT
+   ============================================================ */
+
+/* -----------------------------
+   Utilities
+------------------------------*/
+const LS_KEY = "IMS_ERP_V5_DB";
+
+function nowISO(){ return new Date().toISOString(); }
+function fmtMoney(n){
+  n = Number(n || 0);
+  return "৳ " + n.toLocaleString("en-US");
+}
+function monthKey(date = new Date()){
+  const y = date.getFullYear();
+  const m = String(date.getMonth()+1).padStart(2,"0");
+  return `${y}-${m}`;
+}
+function genId(prefix){
+  const rand = Math.floor(Math.random()*90000)+10000;
+  return `${prefix}-${Date.now()}-${rand}`;
+}
+function toast(title, msg){
+  const wrap = document.getElementById("toastWrap");
+  const div = document.createElement("div");
+  div.className = "toast";
+  div.innerHTML = `
+    <div class="t1">${title}</div>
+    <div class="t2">${msg}</div>
+    <div class="t3">${new Date().toLocaleString()}</div>
+  `;
+  wrap.appendChild(div);
+  setTimeout(()=>div.remove(), 3500);
+}
+function openModal(id){ document.getElementById(id).style.display="flex"; }
+function closeModal(id){ document.getElementById(id).style.display="none"; }
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+/* -----------------------------
+   Database Init
+------------------------------*/
+function getDB(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw) return null;
+  return JSON.parse(raw);
+}
+function saveDB(db){
+  localStorage.setItem(LS_KEY, JSON.stringify(db));
+}
+function seedDB(){
+  const db = {
+    meta:{
+      version:"V5 Ultra Advanced",
+      createdAt: nowISO(),
+      monthlyShareAmount: 10000
+    },
+    admins:[
+      {id:"admin", name:"Super Admin", role:"SUPER_ADMIN", pass:"admin123", active:true, createdAt:nowISO()},
+      {id:"finance", name:"Finance Admin", role:"FINANCE_ADMIN", pass:"finance123", active:true, createdAt:nowISO()},
+      {id:"invest", name:"Investment Admin", role:"INVEST_ADMIN", pass:"invest123", active:true, createdAt:nowISO()},
+    ],
+    members:[
+      {
+        id:"M-1001",
+        name:"Demo Member",
+        phone:"01700000000",
+        email:"demo@gmail.com",
+        pass:"1234",
+        shares:1,
+        status:"ACTIVE",
+        joinDate:"2025-01-01",
+        address:"Dhaka, Bangladesh",
+        photo:"",
+        nidNo:"1234567890",
+        nidFront:"",
+        nidBack:"",
+        nomineeName:"Nominee Demo",
+        nomineeRelation:"Brother",
+        nomineePhone:"01800000000",
+        nomineePhoto:"",
+        createdAt:nowISO(),
+        updatedAt:nowISO()
+      }
+    ],
+    deposits:[
+      // deposit: {id, memberId, month, amount, bank, trxId, slip, status, mrId, note, submittedAt, approvedAt, approvedBy}
+    ],
+    investments:[
+      // investment: {id,title,type,location,startDate,status,totalInvested,documents[],notes, createdAt, createdBy}
+    ],
+    expenses:[
+      // expense: {id, investmentId, voucherId, date, category, amount, method, note, doc, createdBy, createdAt}
+    ],
+    sales:[
+      // sales: {id, investmentId, date, amount, note, createdBy, createdAt}
+    ],
+    profitDistributions:[
+      // {id, investmentId, month, totalProfit, profitPerShare, createdBy, createdAt}
+    ],
+    notices:[
+      // {id, title, message, target:"ALL" or memberId, createdBy, createdAt}
+    ],
+    resignations:[
+      // {id, memberId, resignDate, reason, settlementVoucherId, settlementAmount, doc, createdBy, createdAt}
+    ],
+    activityLogs:[
+      // {id, action, byId, byRole, at, details}
+    ]
+  };
+  saveDB(db);
+  return db;
+}
+function ensureDB(){
+  let db = getDB();
+  if(!db) db = seedDB();
+  return db;
+}
+
+/* -----------------------------
+   Global Session
+------------------------------*/
+let SESSION = {
+  mode: "admin", // admin/member login tab
+  user: null, // {type:"ADMIN"/"MEMBER", id, name, role}
+  page: null
+};
+
+function logActivity(action, details){
+  const db = ensureDB();
+  db.activityLogs.unshift({
+    id: genId("LOG"),
+    action,
+    details,
+    byId: SESSION.user?.id || "SYSTEM",
+    byRole: SESSION.user?.role || "SYSTEM",
+    at: nowISO()
+  });
+  saveDB(db);
+}
+
+/* -----------------------------
+   Login System
+------------------------------*/
+function switchLoginTab(mode){
+  SESSION.mode = mode;
+  document.getElementById("tabAdmin").classList.toggle("active", mode==="admin");
+  document.getElementById("tabMember").classList.toggle("active", mode==="member");
+  document.getElementById("loginIdLabel").innerText = mode==="admin" ? "Admin ID" : "Member ID";
+}
+
+function doLogin(){
+  const id = document.getElementById("loginId").value.trim();
+  const pass = document.getElementById("loginPass").value.trim();
+  const db = ensureDB();
+
+  if(!id || !pass){
+    toast("Login Failed", "Please enter ID and Password.");
+    return;
+  }
+
+  if(SESSION.mode === "admin"){
+    const admin = db.admins.find(a=>a.id===id && a.pass===pass && a.active);
+    if(!admin){
+      toast("Login Failed", "Invalid Admin ID or Password.");
+      return;
+    }
+    SESSION.user = {type:"ADMIN", id:admin.id, name:admin.name, role:admin.role};
+    logActivity("ADMIN_LOGIN", `Admin logged in: ${admin.id}`);
+    startApp();
+  }else{
+    const member = db.members.find(m=>m.id===id && m.pass===pass && m.status==="ACTIVE");
+    if(!member){
+      toast("Login Failed", "Invalid Member ID or Password.");
+      return;
+    }
+    SESSION.user = {type:"MEMBER", id:member.id, name:member.name, role:"MEMBER"};
+    logActivity("MEMBER_LOGIN", `Member logged in: ${member.id}`);
+    startApp();
+  }
+}
+
+function logout(){
+  logActivity("LOGOUT", `User logged out`);
+  SESSION.user = null;
+  SESSION.page = null;
+  document.getElementById("appPage").style.display="none";
+  document.getElementById("loginPage").style.display="flex";
+  toast("Logout", "You have been logged out.");
+}
+
+/* -----------------------------
+   App Start
+------------------------------*/
+function startApp(){
+  document.getElementById("loginPage").style.display="none";
+  document.getElementById("appPage").style.display="grid";
+
+  document.getElementById("currentUserName").innerText = SESSION.user.name;
+  document.getElementById("currentUserRole").innerText = SESSION.user.role;
+  document.getElementById("chipId").innerText = "ID: " + SESSION.user.id;
+  document.getElementById("systemMode").innerText = SESSION.user.type;
+
+  buildSidebar();
+  go(SESSION.user.type==="ADMIN" ? "admin_dashboard" : "member_dashboard");
+}
+
+/* -----------------------------
+   Sidebar
+------------------------------*/
+function buildSidebar(){
+  const nav = document.getElementById("sidebarNav");
+  nav.innerHTML = "";
+
+  const db = ensureDB();
+  const pendingDeposits = db.deposits.filter(d=>d.status==="PENDING").length;
+
+  let items = [];
+  if(SESSION.user.type==="ADMIN"){
+    items = [
+      {id:"admin_dashboard", name:"Dashboard"},
+      {id:"admin_members", name:"Members"},
+      {id:"admin_deposits", name:"Deposits", count: pendingDeposits},
+      {id:"admin_investments", name:"Investments"},
+      {id:"admin_expenses", name:"Expenses"},
+      {id:"admin_sales", name:"Sales"},
+      {id:"admin_profit", name:"Profit Distribution"},
+      {id:"admin_resign", name:"Resignation & Settlement"},
+      {id:"admin_notices", name:"Notices"},
+      {id:"admin_reports", name:"Reports"},
+      {id:"admin_admins", name:"Admin Accounts"},
+      {id:"admin_logs", name:"Activity Logs"},
+    ];
+  }else{
+    items = [
+      {id:"member_dashboard", name:"Dashboard"},
+      {id:"member_profile", name:"My Profile"},
+      {id:"member_deposit", name:"Submit Deposit"},
+      {id:"member_deposit_history", name:"Deposit History"},
+      {id:"member_investments", name:"Investments"},
+      {id:"member_profit", name:"Profit & Shares"},
+      {id:"member_notices", name:"Notices"},
+    ];
+  }
+
+  items.forEach(it=>{
+    const btn = document.createElement("button");
+    btn.className = (SESSION.page===it.id ? "active" : "");
+    btn.onclick = ()=>go(it.id);
+    btn.innerHTML = `
+      <span>${it.name}</span>
+      ${it.count ? `<span class="count">${it.count}</span>` : `<span class="count">›</span>`}
+    `;
+    nav.appendChild(btn);
+  });
+}
+
+/* -----------------------------
+   Navigation Router
+------------------------------*/
+function go(page){
+  SESSION.page = page;
+  buildSidebar();
+
+  if(page==="admin_dashboard") renderAdminDashboard();
+  if(page==="admin_members") renderAdminMembers();
+  if(page==="admin_deposits") renderAdminDeposits();
+  if(page==="admin_investments") renderAdminInvestments();
+  if(page==="admin_expenses") renderAdminExpenses();
+  if(page==="admin_sales") renderAdminSales();
+  if(page==="admin_profit") renderAdminProfit();
+  if(page==="admin_resign") renderAdminResign();
+  if(page==="admin_notices") renderAdminNotices();
+  if(page==="admin_reports") renderAdminReports();
+  if(page==="admin_admins") renderAdminAdmins();
+  if(page==="admin_logs") renderAdminLogs();
+
+  if(page==="member_dashboard") renderMemberDashboard();
+  if(page==="member_profile") renderMemberProfile();
+  if(page==="member_deposit") renderMemberDeposit();
+  if(page==="member_deposit_history") renderMemberDepositHistory();
+  if(page==="member_investments") renderMemberInvestments();
+  if(page==="member_profit") renderMemberProfit();
+  if(page==="member_notices") renderMemberNotices();
+}
+
+/* -----------------------------
+   Header Helper
+------------------------------*/
+function setPage(title, subtitle){
+  document.getElementById("pageTitle").innerText = title;
+  document.getElementById("pageSubtitle").innerText = subtitle;
+}
+
+/* -----------------------------
+   Admin Dashboard
+------------------------------*/
+function renderAdminDashboard(){
+  const db = ensureDB();
+  setPage("Admin Dashboard", "Overview of Members, Deposits, Investments, Expenses, Profit.");
+
+  const totalMembers = db.members.length;
+  const activeMembers = db.members.filter(m=>m.status==="ACTIVE").length;
+  const resignedMembers = db.members.filter(m=>m.status==="RESIGNED").length;
+
+  const totalDeposit = db.deposits.filter(d=>d.status==="APPROVED").reduce((a,b)=>a+Number(b.amount),0);
+  const thisMonth = monthKey();
+  const thisMonthDeposit = db.deposits.filter(d=>d.status==="APPROVED" && d.month===thisMonth).reduce((a,b)=>a+Number(b.amount),0);
+
+  const totalExpense = db.expenses.reduce((a,b)=>a+Number(b.amount),0);
+  const thisMonthExpense = db.expenses.filter(e=>String(e.date).startsWith(thisMonth)).reduce((a,b)=>a+Number(b.amount),0);
+
+  const totalSales = db.sales.reduce((a,b)=>a+Number(b.amount),0);
+  const totalInvestments = db.investments.length;
+
+  const pending = db.deposits.filter(d=>d.status==="PENDING").length;
+
+  const netProfitAll = totalSales - totalExpense;
+
+  const html = `
+    <div class="gridCards">
+      <div class="card">
+        <div class="tag">Members</div>
+        <div class="title">Total Members</div>
+        <div class="value">${totalMembers}</div>
+        <div class="sub">Active: ${activeMembers} | Resigned: ${resignedMembers}</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Deposits</div>
+        <div class="title">Total Approved Deposit</div>
+        <div class="value">${fmtMoney(totalDeposit)}</div>
+        <div class="sub">This Month: ${fmtMoney(thisMonthDeposit)}</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Pending</div>
+        <div class="title">Pending Deposits</div>
+        <div class="value">${pending}</div>
+        <div class="sub">Needs admin approval</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Profit</div>
+        <div class="title">Net Profit (All)</div>
+        <div class="value">${fmtMoney(netProfitAll)}</div>
+        <div class="sub">Sales - Expense</div>
+      </div>
+    </div>
+
+    <div class="twoCols">
+      <div class="panel">
+        <div class="panelHeader">
+          <div>
+            <h3>Quick Summary</h3>
+            <p>System financial summary and performance.</p>
+          </div>
+        </div>
+
+        <table>
+          <tr><th>Item</th><th>Value</th></tr>
+          <tr><td>Total Sales</td><td>${fmtMoney(totalSales)}</td></tr>
+          <tr><td>Total Expenses</td><td>${fmtMoney(totalExpense)}</td></tr>
+          <tr><td>This Month Expenses</td><td>${fmtMoney(thisMonthExpense)}</td></tr>
+          <tr><td>Total Investments</td><td>${totalInvestments}</td></tr>
+          <tr><td>Monthly Share Amount</td><td>${fmtMoney(db.meta.monthlyShareAmount)}</td></tr>
+        </table>
+      </div>
+
+      <div class="panel">
+        <div class="panelHeader">
+          <div>
+            <h3>Latest Pending Deposits</h3>
+            <p>Recent deposits waiting for approval.</p>
+          </div>
+          <div class="panelTools">
+            <button class="btn primary" onclick="go('admin_deposits')">Manage</button>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Month</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${db.deposits.filter(d=>d.status==="PENDING").slice(0,5).map(d=>{
+              const m = db.members.find(x=>x.id===d.memberId);
+              return `
+                <tr>
+                  <td>${m?m.name:"Unknown"}<div class="small">${d.memberId}</div></td>
+                  <td>${d.month}</td>
+                  <td>${fmtMoney(d.amount)}</td>
+                  <td><span class="status st-pending">PENDING</span></td>
+                </tr>
+              `;
+            }).join("") || `<tr><td colspan="4" class="small">No pending deposits.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Admin Members
+------------------------------*/
+function renderAdminMembers(){
+  const db = ensureDB();
+  setPage("Member Management", "Create, Update, Resign Member. Full profile with NID and Nominee.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Add New Member</h3>
+          <p>Create full member profile (Photo, NID, Nominee, Shares).</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Member ID</label>
+          <input id="m_id" placeholder="M-1002" />
+        </div>
+        <div>
+          <label>Full Name</label>
+          <input id="m_name" placeholder="Member Name" />
+        </div>
+        <div>
+          <label>Shares</label>
+          <input id="m_shares" type="number" value="1" />
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Phone</label>
+          <input id="m_phone" placeholder="01XXXXXXXXX" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="m_email" placeholder="member@gmail.com" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="m_pass" placeholder="Create password" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Address</label>
+          <input id="m_address" placeholder="Full Address" />
+        </div>
+        <div>
+          <label>Join Date</label>
+          <input id="m_join" type="date" />
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>NID Number</label>
+          <input id="m_nid" placeholder="NID No" />
+        </div>
+        <div>
+          <label>Nominee Name</label>
+          <input id="m_nom_name" placeholder="Nominee Name" />
+        </div>
+        <div>
+          <label>Nominee Relation</label>
+          <input id="m_nom_rel" placeholder="Relation" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Nominee Phone</label>
+          <input id="m_nom_phone" placeholder="Nominee Phone" />
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="m_status">
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="RESIGNED">RESIGNED</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row row-4">
+        <div>
+          <label>Member Photo</label>
+          <input id="m_photo" type="file" accept="image/*"/>
+        </div>
+        <div>
+          <label>NID Front Photo</label>
+          <input id="m_nid_front" type="file" accept="image/*"/>
+        </div>
+        <div>
+          <label>NID Back Photo</label>
+          <input id="m_nid_back" type="file" accept="image/*"/>
+        </div>
+        <div>
+          <label>Nominee Photo</label>
+          <input id="m_nom_photo" type="file" accept="image/*"/>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="adminAddMember()">Save Member</button>
+
+      <div class="hint">
+        ✔ Full Member Profile will be saved in LocalStorage.  
+        ✔ Member can login using Member ID + Password.
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Members</h3>
+          <p>Search, view, reset password, resign.</p>
+        </div>
+        <div class="panelTools">
+          <input id="memberSearch" placeholder="Search member by name/id/phone..." oninput="renderAdminMembersTable()" />
+        </div>
+      </div>
+
+      <div id="membersTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderAdminMembersTable();
+}
+
+function renderAdminMembersTable(){
+  const db = ensureDB();
+  const q = (document.getElementById("memberSearch")?.value || "").toLowerCase().trim();
+
+  const filtered = db.members.filter(m=>{
+    const s = `${m.id} ${m.name} ${m.phone} ${m.email}`.toLowerCase();
+    return s.includes(q);
+  });
+
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Shares</th>
+          <th>Status</th>
+          <th>Phone</th>
+          <th>Email</th>
+          <th>Tools</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${filtered.map(m=>{
+          return `
+            <tr>
+              <td>
+                <b>${m.name}</b>
+                <div class="small">${m.id}</div>
+              </td>
+              <td>${m.shares}</td>
+              <td><span class="status ${m.status==="ACTIVE"?"st-approved":"st-rejected"}">${m.status}</span></td>
+              <td>${m.phone}</td>
+              <td>${m.email}</td>
+              <td>
+                <button class="btn" onclick="viewMember('${m.id}')">View</button>
+                <button class="btn warn" onclick="resetMemberPassword('${m.id}')">Reset Pass</button>
+                <button class="btn danger" onclick="resignMember('${m.id}')">Resign</button>
+              </td>
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="6" class="small">No members found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+  document.getElementById("membersTable").innerHTML = html;
+}
+
+async function adminAddMember(){
+  const db = ensureDB();
+
+  const id = document.getElementById("m_id").value.trim();
+  const name = document.getElementById("m_name").value.trim();
+  const shares = Number(document.getElementById("m_shares").value || 1);
+  const phone = document.getElementById("m_phone").value.trim();
+  const email = document.getElementById("m_email").value.trim();
+  const pass = document.getElementById("m_pass").value.trim();
+  const address = document.getElementById("m_address").value.trim();
+  const joinDate = document.getElementById("m_join").value || "";
+  const nidNo = document.getElementById("m_nid").value.trim();
+
+  const nomineeName = document.getElementById("m_nom_name").value.trim();
+  const nomineeRelation = document.getElementById("m_nom_rel").value.trim();
+  const nomineePhone = document.getElementById("m_nom_phone").value.trim();
+  const status = document.getElementById("m_status").value;
+
+  if(!id || !name || !pass){
+    toast("Validation Error", "Member ID, Name and Password required.");
+    return;
+  }
+
+  if(db.members.find(x=>x.id===id)){
+    toast("Duplicate Member", "This Member ID already exists.");
+    return;
+  }
+
+  const photoFile = document.getElementById("m_photo").files[0];
+  const nidFrontFile = document.getElementById("m_nid_front").files[0];
+  const nidBackFile = document.getElementById("m_nid_back").files[0];
+  const nomineePhotoFile = document.getElementById("m_nom_photo").files[0];
+
+  const photo = photoFile ? await fileToBase64(photoFile) : "";
+  const nidFront = nidFrontFile ? await fileToBase64(nidFrontFile) : "";
+  const nidBack = nidBackFile ? await fileToBase64(nidBackFile) : "";
+  const nomineePhoto = nomineePhotoFile ? await fileToBase64(nomineePhotoFile) : "";
+
+  db.members.unshift({
+    id, name, shares, phone, email, pass,
+    address, joinDate,
+    photo, nidNo, nidFront, nidBack,
+    nomineeName, nomineeRelation, nomineePhone, nomineePhoto,
+    status,
+    createdAt: nowISO(),
+    updatedAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("ADD_MEMBER", `Added member: ${id}`);
+  toast("Member Added", `${name} (${id}) created successfully.`);
+  renderAdminMembersTable();
+}
+
+function viewMember(memberId){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===memberId);
+  if(!m) return;
+
+  const deposits = db.deposits.filter(d=>d.memberId===memberId && d.status==="APPROVED")
+    .reduce((a,b)=>a+Number(b.amount),0);
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>${m.name} (${m.id})</h3>
+          <p>Full Profile Information</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Member Photo</label>
+          ${m.photo ? `<img src="${m.photo}" style="width:120px;height:120px;border-radius:18px;border:1px solid var(--line);object-fit:cover;">` : `<div class="small">No Photo</div>`}
+        </div>
+        <div>
+          <label>Nominee Photo</label>
+          ${m.nomineePhoto ? `<img src="${m.nomineePhoto}" style="width:120px;height:120px;border-radius:18px;border:1px solid var(--line);object-fit:cover;">` : `<div class="small">No Photo</div>`}
+        </div>
+        <div>
+          <label>Status</label>
+          <div><span class="status ${m.status==="ACTIVE"?"st-approved":"st-rejected"}">${m.status}</span></div>
+          <div class="small" style="margin-top:8px;">Shares: <b>${m.shares}</b></div>
+          <div class="small">Total Deposit: <b>${fmtMoney(deposits)}</b></div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row row-2">
+        <div>
+          <label>Phone</label>
+          <input value="${m.phone}" disabled />
+        </div>
+        <div>
+          <label>Email</label>
+          <input value="${m.email}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Address</label>
+          <input value="${m.address}" disabled />
+        </div>
+        <div>
+          <label>Join Date</label>
+          <input value="${m.joinDate}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>NID No</label>
+          <input value="${m.nidNo}" disabled />
+        </div>
+        <div>
+          <label>Password</label>
+          <input value="${m.pass}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Nominee Name</label>
+          <input value="${m.nomineeName}" disabled />
+        </div>
+        <div>
+          <label>Nominee Relation</label>
+          <input value="${m.nomineeRelation}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Nominee Phone</label>
+          <input value="${m.nomineePhone}" disabled />
+        </div>
+        <div></div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row row-2">
+        <div>
+          <label>NID Front</label>
+          ${m.nidFront ? `<img src="${m.nidFront}" style="width:100%;max-width:320px;border-radius:18px;border:1px solid var(--line);">` : `<div class="small">No file</div>`}
+        </div>
+        <div>
+          <label>NID Back</label>
+          ${m.nidBack ? `<img src="${m.nidBack}" style="width:100%;max-width:320px;border-radius:18px;border:1px solid var(--line);">` : `<div class="small">No file</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("viewerTitle").innerText = "Member Viewer";
+  document.getElementById("viewerSub").innerText = "Member profile details preview";
+  document.getElementById("viewerBody").innerHTML = html;
+  openModal("modalViewer");
+}
+
+function resetMemberPassword(memberId){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===memberId);
+  if(!m) return;
+
+  const newPass = prompt("Enter new password for " + memberId);
+  if(!newPass) return;
+
+  m.pass = newPass;
+  m.updatedAt = nowISO();
+  saveDB(db);
+
+  logActivity("RESET_MEMBER_PASSWORD", `Password reset for ${memberId}`);
+  toast("Password Reset", `New password saved for ${memberId}`);
+  renderAdminMembersTable();
+}
+
+function resignMember(memberId){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===memberId);
+  if(!m) return;
+
+  if(m.status==="RESIGNED"){
+    toast("Already Resigned", "This member is already resigned.");
+    return;
+  }
+
+  const reason = prompt("Enter resignation reason:");
+  if(reason===null) return;
+
+  m.status = "RESIGNED";
+  m.updatedAt = nowISO();
+
+  db.resignations.unshift({
+    id: genId("RESIGN"),
+    memberId,
+    resignDate: new Date().toISOString().slice(0,10),
+    reason,
+    settlementVoucherId:"",
+    settlementAmount:0,
+    doc:"",
+    createdBy: SESSION.user.id,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("RESIGN_MEMBER", `Resigned member ${memberId}`);
+  toast("Member Resigned", `${m.name} marked as resigned.`);
+  renderAdminMembersTable();
+}
+
+/* -----------------------------
+   Admin Deposits
+------------------------------*/
+function renderAdminDeposits(){
+  const db = ensureDB();
+  setPage("Deposit Management", "Approve/Reject deposits, generate MR ID, check slip and transaction.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Pending Deposits</h3>
+          <p>Verify slip, approve deposit, generate MR ID and signature.</p>
+        </div>
+        <div class="panelTools">
+          <button class="btn" onclick="renderAdminDeposits()">Refresh</button>
+        </div>
+      </div>
+
+      <div id="pendingDepositTable"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Approved Deposits</h3>
+          <p>All confirmed deposits with MR ID.</p>
+        </div>
+      </div>
+      <div id="approvedDepositTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+
+  const pending = db.deposits.filter(d=>d.status==="PENDING");
+  const approved = db.deposits.filter(d=>d.status==="APPROVED");
+
+  document.getElementById("pendingDepositTable").innerHTML = renderDepositTable(pending, true);
+  document.getElementById("approvedDepositTable").innerHTML = renderDepositTable(approved, false);
+}
+
+function renderDepositTable(list, isPending){
+  const db = ensureDB();
+
+  return `
+    <table>
+      <thead>
+        <tr>
+          <th>Deposit ID</th>
+          <th>Member</th>
+          <th>Month</th>
+          <th>Amount</th>
+          <th>Bank</th>
+          <th>TRX ID</th>
+          <th>Status</th>
+          <th>MR ID</th>
+          <th>Slip</th>
+          ${isPending ? `<th>Action</th>` : `<th>Approved By</th>`}
+        </tr>
+      </thead>
+      <tbody>
+        ${list.map(d=>{
+          const m = db.members.find(x=>x.id===d.memberId);
+          return `
+            <tr>
+              <td>${d.id}</td>
+              <td><b>${m?m.name:"Unknown"}</b><div class="small">${d.memberId}</div></td>
+              <td>${d.month}</td>
+              <td>${fmtMoney(d.amount)}</td>
+              <td>${d.bank}</td>
+              <td>${d.trxId}</td>
+              <td>
+                <span class="status ${
+                  d.status==="PENDING"?"st-pending": d.status==="APPROVED"?"st-approved":"st-rejected"
+                }">${d.status}</span>
+              </td>
+              <td>${d.mrId || "-"}</td>
+              <td>${d.slip ? `<button class="btn" onclick="viewSlip('${d.id}')">View</button>` : "-"}</td>
+              ${isPending ? `
+                <td>
+                  <button class="btn success" onclick="approveDeposit('${d.id}')">Approve</button>
+                  <button class="btn danger" onclick="rejectDeposit('${d.id}')">Reject</button>
+                </td>
+              ` : `
+                <td>${d.approvedBy || "-"}</td>
+              `}
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="10" class="small">No records found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+}
+
+function viewSlip(depositId){
+  const db = ensureDB();
+  const d = db.deposits.find(x=>x.id===depositId);
+  if(!d || !d.slip) return;
+
+  const html = `
+    <div class="panel">
+      <h3>Deposit Slip Preview</h3>
+      <p class="small">Deposit ID: ${d.id} | Member: ${d.memberId}</p>
+      <div class="hr"></div>
+      <img src="${d.slip}" style="width:100%;max-width:700px;border-radius:18px;border:1px solid var(--line);"/>
+    </div>
+  `;
+  document.getElementById("viewerTitle").innerText = "Deposit Slip";
+  document.getElementById("viewerSub").innerText = "Slip image preview";
+  document.getElementById("viewerBody").innerHTML = html;
+  openModal("modalViewer");
+}
+
+function approveDeposit(depositId){
+  const db = ensureDB();
+  const d = db.deposits.find(x=>x.id===depositId);
+  if(!d) return;
+
+  const mrId = prompt("Enter MR ID (Example: MR-2026-0001)");
+  if(!mrId) return;
+
+  d.status = "APPROVED";
+  d.mrId = mrId;
+  d.approvedAt = nowISO();
+  d.approvedBy = SESSION.user.id;
+
+  saveDB(db);
+  logActivity("APPROVE_DEPOSIT", `Deposit approved: ${depositId} MR: ${mrId}`);
+
+  toast("Deposit Approved", `MR ID generated: ${mrId}`);
+  buildSidebar();
+  renderAdminDeposits();
+}
+
+function rejectDeposit(depositId){
+  const db = ensureDB();
+  const d = db.deposits.find(x=>x.id===depositId);
+  if(!d) return;
+
+  const note = prompt("Rejection note?");
+  if(note===null) return;
+
+  d.status = "REJECTED";
+  d.note = note;
+  d.approvedAt = nowISO();
+  d.approvedBy = SESSION.user.id;
+
+  saveDB(db);
+  logActivity("REJECT_DEPOSIT", `Deposit rejected: ${depositId}`);
+
+  toast("Deposit Rejected", `Deposit ${depositId} rejected.`);
+  buildSidebar();
+  renderAdminDeposits();
+}
+
+/* -----------------------------
+   Member Dashboard
+------------------------------*/
+function renderMemberDashboard(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+  setPage("Member Dashboard", "Your deposit status, profit, shares and notices.");
+
+  const approvedDeposits = db.deposits.filter(d=>d.memberId===m.id && d.status==="APPROVED");
+  const totalDeposit = approvedDeposits.reduce((a,b)=>a+Number(b.amount),0);
+
+  const currentMonth = monthKey();
+  const thisMonthApproved = db.deposits.find(d=>d.memberId===m.id && d.month===currentMonth && d.status==="APPROVED");
+  const thisMonthPending = db.deposits.find(d=>d.memberId===m.id && d.month===currentMonth && d.status==="PENDING");
+
+  const required = m.shares * db.meta.monthlyShareAmount;
+  const due = thisMonthApproved ? 0 : required;
+
+  const profitEntries = db.profitDistributions;
+  let myProfit = 0;
+  profitEntries.forEach(p=>{
+    myProfit += (Number(p.profitPerShare) * Number(m.shares));
+  });
+
+  const html = `
+    <div class="gridCards">
+      <div class="card">
+        <div class="tag">Shares</div>
+        <div class="title">My Total Shares</div>
+        <div class="value">${m.shares}</div>
+        <div class="sub">Share Amount: ${fmtMoney(db.meta.monthlyShareAmount)} / share</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Deposit</div>
+        <div class="title">Total Approved Deposit</div>
+        <div class="value">${fmtMoney(totalDeposit)}</div>
+        <div class="sub">All time deposit record</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Due</div>
+        <div class="title">This Month Due</div>
+        <div class="value">${fmtMoney(due)}</div>
+        <div class="sub">${thisMonthPending ? "Pending submission exists" : "No approved deposit yet"}</div>
+      </div>
+
+      <div class="card">
+        <div class="tag">Profit</div>
+        <div class="title">Total Profit Earned</div>
+        <div class="value">${fmtMoney(myProfit)}</div>
+        <div class="sub">Based on profit distribution history</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Current Month Deposit Status</h3>
+          <p>Month: ${currentMonth}</p>
+        </div>
+        <div class="panelTools">
+          <button class="btn primary" onclick="go('member_deposit')">Submit Deposit</button>
+        </div>
+      </div>
+
+      <table>
+        <tr><th>Status</th><th>Details</th></tr>
+        <tr>
+          <td>
+            ${
+              thisMonthApproved ? `<span class="status st-approved">APPROVED</span>` :
+              thisMonthPending ? `<span class="status st-pending">PENDING</span>` :
+              `<span class="status st-rejected">NOT SUBMITTED</span>`
+            }
+          </td>
+          <td>
+            ${
+              thisMonthApproved ? `Approved MR ID: <b>${thisMonthApproved.mrId}</b>` :
+              thisMonthPending ? `Deposit submitted. Waiting admin approval.` :
+              `Please submit deposit slip and transaction ID.`
+            }
+          </td>
+        </tr>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Member Profile
+------------------------------*/
+function renderMemberProfile(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+
+  setPage("My Profile", "View and update your profile information.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Profile Information</h3>
+          <p>Update your phone, email, address and photo.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Profile Photo</label>
+          ${m.photo ? `<img src="${m.photo}" style="width:120px;height:120px;border-radius:18px;border:1px solid var(--line);object-fit:cover;">` : `<div class="small">No Photo</div>`}
+          <input id="up_photo" type="file" accept="image/*" style="margin-top:8px;" />
+        </div>
+        <div>
+          <label>Member ID</label>
+          <input value="${m.id}" disabled />
+        </div>
+        <div>
+          <label>Full Name</label>
+          <input value="${m.name}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Phone</label>
+          <input id="up_phone" value="${m.phone}" />
+        </div>
+        <div>
+          <label>Email</label>
+          <input id="up_email" value="${m.email}" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Address</label>
+          <input id="up_address" value="${m.address}" />
+        </div>
+        <div>
+          <label>Shares</label>
+          <input value="${m.shares}" disabled />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="row row-2">
+        <div>
+          <label>Change Password</label>
+          <input id="up_pass" placeholder="New password (optional)" />
+        </div>
+        <div>
+          <label>Confirm Password</label>
+          <input id="up_pass2" placeholder="Confirm password" />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <button class="btn success" onclick="memberUpdateProfile()">Update Profile</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>NID & Nominee Info (Read Only)</h3>
+          <p>For security, only admin can update these fields.</p>
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>NID No</label>
+          <input value="${m.nidNo}" disabled />
+        </div>
+        <div>
+          <label>Nominee Name</label>
+          <input value="${m.nomineeName}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Nominee Relation</label>
+          <input value="${m.nomineeRelation}" disabled />
+        </div>
+        <div>
+          <label>Nominee Phone</label>
+          <input value="${m.nomineePhone}" disabled />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>NID Front</label>
+          ${m.nidFront ? `<img src="${m.nidFront}" style="width:100%;max-width:340px;border-radius:18px;border:1px solid var(--line);">` : `<div class="small">No file</div>`}
+        </div>
+        <div>
+          <label>NID Back</label>
+          ${m.nidBack ? `<img src="${m.nidBack}" style="width:100%;max-width:340px;border-radius:18px;border:1px solid var(--line);">` : `<div class="small">No file</div>`}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+async function memberUpdateProfile(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+  if(!m) return;
+
+  const phone = document.getElementById("up_phone").value.trim();
+  const email = document.getElementById("up_email").value.trim();
+  const address = document.getElementById("up_address").value.trim();
+
+  const pass = document.getElementById("up_pass").value.trim();
+  const pass2 = document.getElementById("up_pass2").value.trim();
+
+  if(pass || pass2){
+    if(pass !== pass2){
+      toast("Password Error", "Password confirmation mismatch.");
+      return;
+    }
+    m.pass = pass;
+  }
+
+  const photoFile = document.getElementById("up_photo").files[0];
+  if(photoFile){
+    m.photo = await fileToBase64(photoFile);
+  }
+
+  m.phone = phone;
+  m.email = email;
+  m.address = address;
+  m.updatedAt = nowISO();
+
+  saveDB(db);
+  logActivity("MEMBER_PROFILE_UPDATE", `Member updated profile ${m.id}`);
+  toast("Profile Updated", "Your profile updated successfully.");
+  renderMemberProfile();
+}
+
+/* -----------------------------
+   Member Deposit Submit
+------------------------------*/
+function renderMemberDeposit(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+  setPage("Submit Deposit", "Submit monthly deposit with transaction ID and slip.");
+
+  const currentMonth = monthKey();
+  const required = m.shares * db.meta.monthlyShareAmount;
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Monthly Deposit Submission</h3>
+          <p>Share Based Deposit. Required amount auto calculated.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Month</label>
+          <input id="d_month" value="${currentMonth}" />
+        </div>
+        <div>
+          <label>Amount (Auto)</label>
+          <input id="d_amount" value="${required}" disabled />
+        </div>
+        <div>
+          <label>Bank Name</label>
+          <input id="d_bank" placeholder="Bank Name" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Transaction ID</label>
+          <input id="d_trx" placeholder="Enter TRX ID" />
+        </div>
+        <div>
+          <label>Deposit Date</label>
+          <input id="d_date" type="date" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Deposit Slip Upload</label>
+          <input id="d_slip" type="file" accept="image/*" />
+        </div>
+        <div>
+          <label>Notes</label>
+          <input id="d_note" placeholder="Optional note..." />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="memberSubmitDeposit()">Submit Deposit</button>
+
+      <div class="hint">
+        ✔ Submit করলে Deposit Pending হবে।  
+        ✔ Admin Approve করলে MR ID generate হবে এবং Approved list এ যাবে।
+      </div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+async function memberSubmitDeposit(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+
+  const month = document.getElementById("d_month").value.trim();
+  const bank = document.getElementById("d_bank").value.trim();
+  const trxId = document.getElementById("d_trx").value.trim();
+  const date = document.getElementById("d_date").value;
+  const note = document.getElementById("d_note").value.trim();
+
+  const required = m.shares * db.meta.monthlyShareAmount;
+
+  if(!month || !bank || !trxId || !date){
+    toast("Validation Error", "Month, Bank, TRX ID and Date required.");
+    return;
+  }
+
+  const already = db.deposits.find(d=>d.memberId===m.id && d.month===month && (d.status==="PENDING" || d.status==="APPROVED"));
+  if(already){
+    toast("Duplicate Deposit", "This month deposit already exists.");
+    return;
+  }
+
+  const slipFile = document.getElementById("d_slip").files[0];
+  if(!slipFile){
+    toast("Slip Required", "Please upload deposit slip.");
+    return;
+  }
+
+  const slip = await fileToBase64(slipFile);
+
+  const depositId = genId("DEP");
+  db.deposits.unshift({
+    id: depositId,
+    memberId: m.id,
+    month,
+    amount: required,
+    bank,
+    trxId,
+    slip,
+    note,
+    status:"PENDING",
+    mrId:"",
+    submittedAt: nowISO(),
+    approvedAt:"",
+    approvedBy:""
+  });
+
+  saveDB(db);
+  logActivity("SUBMIT_DEPOSIT", `Member submitted deposit ${depositId}`);
+  toast("Deposit Submitted", "Deposit submitted successfully. Waiting for approval.");
+
+  renderMemberDepositHistory();
+}
+
+/* -----------------------------
+   Member Deposit History
+------------------------------*/
+function renderMemberDepositHistory(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+  setPage("Deposit History", "Your full deposit history with status and MR ID.");
+
+  const list = db.deposits.filter(d=>d.memberId===m.id);
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>My Deposits</h3>
+          <p>Pending / Approved / Rejected history.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Deposit ID</th>
+            <th>Month</th>
+            <th>Amount</th>
+            <th>Bank</th>
+            <th>TRX</th>
+            <th>Status</th>
+            <th>MR ID</th>
+            <th>Slip</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(d=>`
+            <tr>
+              <td>${d.id}</td>
+              <td>${d.month}</td>
+              <td>${fmtMoney(d.amount)}</td>
+              <td>${d.bank}</td>
+              <td>${d.trxId}</td>
+              <td><span class="status ${
+                d.status==="PENDING"?"st-pending": d.status==="APPROVED"?"st-approved":"st-rejected"
+              }">${d.status}</span></td>
+              <td>${d.mrId || "-"}</td>
+              <td>${d.slip ? `<button class="btn" onclick="viewSlip('${d.id}')">View</button>` : "-"}</td>
+            </tr>
+          `).join("") || `<tr><td colspan="8" class="small">No deposits found.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Admin Investments
+------------------------------*/
+function renderAdminInvestments(){
+  const db = ensureDB();
+  setPage("Investment Management", "Create investments and attach documents. Track sales, expense and profit.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Create New Investment</h3>
+          <p>Add investment details, location, documents and notes.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Investment ID</label>
+          <input id="inv_id" placeholder="INV-001" />
+        </div>
+        <div>
+          <label>Investment Title</label>
+          <input id="inv_title" placeholder="Business / Project Name" />
+        </div>
+        <div>
+          <label>Type</label>
+          <input id="inv_type" placeholder="Land / Trading / Shop / Product" />
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Location</label>
+          <input id="inv_loc" placeholder="Dhaka / Chittagong / etc" />
+        </div>
+        <div>
+          <label>Start Date</label>
+          <input id="inv_date" type="date" />
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="inv_status">
+            <option value="RUNNING">RUNNING</option>
+            <option value="CLOSED">CLOSED</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Total Invested Amount</label>
+          <input id="inv_amount" type="number" value="0" />
+        </div>
+        <div>
+          <label>Notes</label>
+          <input id="inv_notes" placeholder="Investment notes..." />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Attach Document (Image/PDF)</label>
+          <input id="inv_doc" type="file" accept="image/*" />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="adminAddInvestment()">Save Investment</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Investments</h3>
+          <p>Track expense, sales and profit per investment.</p>
+        </div>
+      </div>
+
+      <div id="investmentTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderInvestmentTable();
+}
+
+async function adminAddInvestment(){
+  const db = ensureDB();
+
+  const id = document.getElementById("inv_id").value.trim();
+  const title = document.getElementById("inv_title").value.trim();
+  const type = document.getElementById("inv_type").value.trim();
+  const location = document.getElementById("inv_loc").value.trim();
+  const startDate = document.getElementById("inv_date").value;
+  const status = document.getElementById("inv_status").value;
+  const totalInvested = Number(document.getElementById("inv_amount").value || 0);
+  const notes = document.getElementById("inv_notes").value.trim();
+
+  if(!id || !title){
+    toast("Validation Error", "Investment ID and Title required.");
+    return;
+  }
+  if(db.investments.find(x=>x.id===id)){
+    toast("Duplicate", "Investment ID already exists.");
+    return;
+  }
+
+  const docFile = document.getElementById("inv_doc").files[0];
+  const doc = docFile ? await fileToBase64(docFile) : "";
+
+  db.investments.unshift({
+    id, title, type, location, startDate,
+    status,
+    totalInvested,
+    documents: doc ? [doc] : [],
+    notes,
+    createdAt: nowISO(),
+    createdBy: SESSION.user.id
+  });
+
+  saveDB(db);
+  logActivity("ADD_INVESTMENT", `Investment created: ${id}`);
+  toast("Investment Added", `${title} (${id}) saved.`);
+  renderInvestmentTable();
+}
+
+function renderInvestmentTable(){
+  const db = ensureDB();
+
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Investment</th>
+          <th>Status</th>
+          <th>Total Invested</th>
+          <th>Total Expense</th>
+          <th>Total Sales</th>
+          <th>Net Profit</th>
+          <th>Tools</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${db.investments.map(inv=>{
+          const exp = db.expenses.filter(e=>e.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+          const sales = db.sales.filter(s=>s.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+          const profit = sales - exp;
+
+          return `
+            <tr>
+              <td><b>${inv.title}</b><div class="small">${inv.id} | ${inv.type}</div></td>
+              <td><span class="status ${inv.status==="RUNNING"?"st-approved":"st-rejected"}">${inv.status}</span></td>
+              <td>${fmtMoney(inv.totalInvested)}</td>
+              <td>${fmtMoney(exp)}</td>
+              <td>${fmtMoney(sales)}</td>
+              <td>${fmtMoney(profit)}</td>
+              <td>
+                <button class="btn" onclick="viewInvestment('${inv.id}')">View</button>
+              </td>
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="7" class="small">No investments created.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("investmentTable").innerHTML = html;
+}
+
+function viewInvestment(invId){
+  const db = ensureDB();
+  const inv = db.investments.find(x=>x.id===invId);
+  if(!inv) return;
+
+  const exp = db.expenses.filter(e=>e.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+  const sales = db.sales.filter(s=>s.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+  const profit = sales - exp;
+
+  const html = `
+    <div class="panel">
+      <h3>${inv.title} (${inv.id})</h3>
+      <p class="small">${inv.type} | Location: ${inv.location} | Start: ${inv.startDate}</p>
+
+      <div class="hr"></div>
+
+      <div class="row row-3">
+        <div class="card">
+          <div class="title">Total Invested</div>
+          <div class="value">${fmtMoney(inv.totalInvested)}</div>
+        </div>
+        <div class="card">
+          <div class="title">Total Expense</div>
+          <div class="value">${fmtMoney(exp)}</div>
+        </div>
+        <div class="card">
+          <div class="title">Total Sales</div>
+          <div class="value">${fmtMoney(sales)}</div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:12px;">
+        <div class="card">
+          <div class="title">Net Profit</div>
+          <div class="value">${fmtMoney(profit)}</div>
+          <div class="sub">Sales - Expense</div>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="panel">
+        <h3>Documents</h3>
+        <div class="filePreview">
+          ${inv.documents.map(doc=>`<img src="${doc}" />`).join("") || `<div class="small">No documents.</div>`}
+        </div>
+      </div>
+
+      <div class="panel">
+        <h3>Notes</h3>
+        <div class="small">${inv.notes || "No notes."}</div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("viewerTitle").innerText = "Investment Viewer";
+  document.getElementById("viewerSub").innerText = "Full investment details and performance";
+  document.getElementById("viewerBody").innerHTML = html;
+  openModal("modalViewer");
+}
+
+/* -----------------------------
+   Admin Expenses
+------------------------------*/
+function renderAdminExpenses(){
+  const db = ensureDB();
+  setPage("Expense Management", "Add vouchers, expenses, documents. Linked with investments.");
+
+  const invOptions = db.investments.map(i=>`<option value="${i.id}">${i.title} (${i.id})</option>`).join("");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Add Expense / Voucher</h3>
+          <p>Add expense under investment with voucher ID and document.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Investment</label>
+          <select id="ex_inv">${invOptions}</select>
+        </div>
+        <div>
+          <label>Voucher ID</label>
+          <input id="ex_voucher" placeholder="VCH-2026-001" />
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="ex_date" type="date" />
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Category</label>
+          <input id="ex_cat" placeholder="Transport / Rent / Salary" />
+        </div>
+        <div>
+          <label>Amount</label>
+          <input id="ex_amount" type="number" value="0" />
+        </div>
+        <div>
+          <label>Payment Method</label>
+          <input id="ex_method" placeholder="Cash / Bank / Bkash" />
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Note</label>
+          <input id="ex_note" placeholder="Expense note..." />
+        </div>
+        <div>
+          <label>Voucher Document</label>
+          <input id="ex_doc" type="file" accept="image/*" />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="adminAddExpense()">Save Expense</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Expenses</h3>
+          <p>Voucher wise expense list.</p>
+        </div>
+      </div>
+
+      <div id="expenseTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderExpenseTable();
+}
+
+async function adminAddExpense(){
+  const db = ensureDB();
+  const investmentId = document.getElementById("ex_inv").value;
+  const voucherId = document.getElementById("ex_voucher").value.trim();
+  const date = document.getElementById("ex_date").value;
+  const category = document.getElementById("ex_cat").value.trim();
+  const amount = Number(document.getElementById("ex_amount").value || 0);
+  const method = document.getElementById("ex_method").value.trim();
+  const note = document.getElementById("ex_note").value.trim();
+
+  if(!investmentId || !voucherId || !date || !category){
+    toast("Validation Error", "Investment, Voucher ID, Date, Category required.");
+    return;
+  }
+
+  const docFile = document.getElementById("ex_doc").files[0];
+  const doc = docFile ? await fileToBase64(docFile) : "";
+
+  db.expenses.unshift({
+    id: genId("EXP"),
+    investmentId,
+    voucherId,
+    date,
+    category,
+    amount,
+    method,
+    note,
+    doc,
+    createdBy: SESSION.user.id,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("ADD_EXPENSE", `Expense added voucher ${voucherId}`);
+  toast("Expense Saved", `Voucher ${voucherId} added.`);
+  renderExpenseTable();
+}
+
+function renderExpenseTable(){
+  const db = ensureDB();
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Voucher</th>
+          <th>Investment</th>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Method</th>
+          <th>Document</th>
+          <th>Added By</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${db.expenses.map(e=>{
+          const inv = db.investments.find(x=>x.id===e.investmentId);
+          return `
+            <tr>
+              <td><b>${e.voucherId}</b><div class="small">${e.id}</div></td>
+              <td>${inv ? inv.title : e.investmentId}</td>
+              <td>${e.date}</td>
+              <td>${e.category}</td>
+              <td>${fmtMoney(e.amount)}</td>
+              <td>${e.method}</td>
+              <td>${e.doc ? `<button class="btn" onclick="viewDoc('${e.id}')">View</button>` : "-"}</td>
+              <td>${e.createdBy}</td>
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="8" class="small">No expenses found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+  document.getElementById("expenseTable").innerHTML = html;
+}
+
+function viewDoc(expenseId){
+  const db = ensureDB();
+  const e = db.expenses.find(x=>x.id===expenseId);
+  if(!e || !e.doc) return;
+
+  const html = `
+    <div class="panel">
+      <h3>Voucher Document</h3>
+      <p class="small">Voucher: ${e.voucherId}</p>
+      <div class="hr"></div>
+      <img src="${e.doc}" style="width:100%;max-width:700px;border-radius:18px;border:1px solid var(--line);" />
+    </div>
+  `;
+  document.getElementById("viewerTitle").innerText = "Voucher Document";
+  document.getElementById("viewerSub").innerText = "Expense voucher preview";
+  document.getElementById("viewerBody").innerHTML = html;
+  openModal("modalViewer");
+}
+
+/* -----------------------------
+   Admin Sales
+------------------------------*/
+function renderAdminSales(){
+  const db = ensureDB();
+  setPage("Sales Management", "Add sales amount per investment to calculate profit.");
+
+  const invOptions = db.investments.map(i=>`<option value="${i.id}">${i.title} (${i.id})</option>`).join("");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Add Sales</h3>
+          <p>Record sales revenue for investment.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Investment</label>
+          <select id="s_inv">${invOptions}</select>
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="s_date" type="date" />
+        </div>
+        <div>
+          <label>Sales Amount</label>
+          <input id="s_amount" type="number" value="0" />
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Note</label>
+          <input id="s_note" placeholder="Sales note..." />
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="adminAddSales()">Save Sales</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Sales Records</h3>
+          <p>Investment-wise sales list.</p>
+        </div>
+      </div>
+      <div id="salesTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderSalesTable();
+}
+
+function adminAddSales(){
+  const db = ensureDB();
+  const investmentId = document.getElementById("s_inv").value;
+  const date = document.getElementById("s_date").value;
+  const amount = Number(document.getElementById("s_amount").value || 0);
+  const note = document.getElementById("s_note").value.trim();
+
+  if(!investmentId || !date || amount<=0){
+    toast("Validation Error", "Investment, Date and amount required.");
+    return;
+  }
+
+  db.sales.unshift({
+    id: genId("SALE"),
+    investmentId,
+    date,
+    amount,
+    note,
+    createdBy: SESSION.user.id,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("ADD_SALES", `Sales added: ${amount} investment ${investmentId}`);
+  toast("Sales Saved", "Sales record added.");
+  renderSalesTable();
+}
+
+function renderSalesTable(){
+  const db = ensureDB();
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Sales ID</th>
+          <th>Investment</th>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Note</th>
+          <th>Added By</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${db.sales.map(s=>{
+          const inv = db.investments.find(x=>x.id===s.investmentId);
+          return `
+            <tr>
+              <td>${s.id}</td>
+              <td>${inv?inv.title:s.investmentId}</td>
+              <td>${s.date}</td>
+              <td>${fmtMoney(s.amount)}</td>
+              <td>${s.note || "-"}</td>
+              <td>${s.createdBy}</td>
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="6" class="small">No sales found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+  document.getElementById("salesTable").innerHTML = html;
+}
+
+/* -----------------------------
+   Admin Profit Distribution
+------------------------------*/
+function renderAdminProfit(){
+  const db = ensureDB();
+  setPage("Profit Distribution", "Distribute investment profit share-wise to all members.");
+
+  const invOptions = db.investments.map(i=>`<option value="${i.id}">${i.title} (${i.id})</option>`).join("");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Distribute Profit</h3>
+          <p>System will calculate Net Profit and Profit per Share.</p>
+        </div>
+      </div>
+
+      <div class="row row-3">
+        <div>
+          <label>Investment</label>
+          <select id="p_inv">${invOptions}</select>
+        </div>
+        <div>
+          <label>Month</label>
+          <input id="p_month" value="${monthKey()}" />
+        </div>
+        <div>
+          <label>Total Profit (Manual override optional)</label>
+          <input id="p_profit" type="number" value="0" />
+        </div>
+      </div>
+
+      <div class="hint">
+        🔥 If profit is 0, system will auto-calc using Sales - Expense.  
+        Profit Per Share = Total Profit / Total Shares.
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="distributeProfit()">Distribute Now</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Profit Distribution History</h3>
+          <p>All distribution logs.</p>
+        </div>
+      </div>
+      <div id="profitTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderProfitHistory();
+}
+
+function distributeProfit(){
+  const db = ensureDB();
+  const investmentId = document.getElementById("p_inv").value;
+  const month = document.getElementById("p_month").value.trim();
+  let totalProfit = Number(document.getElementById("p_profit").value || 0);
+
+  if(!investmentId || !month){
+    toast("Validation Error", "Investment and month required.");
+    return;
+  }
+
+  if(totalProfit === 0){
+    const exp = db.expenses.filter(e=>e.investmentId===investmentId).reduce((a,b)=>a+Number(b.amount),0);
+    const sales = db.sales.filter(s=>s.investmentId===investmentId).reduce((a,b)=>a+Number(b.amount),0);
+    totalProfit = sales - exp;
+  }
+
+  const totalShares = db.members.filter(m=>m.status==="ACTIVE").reduce((a,b)=>a+Number(b.shares),0);
+  if(totalShares<=0){
+    toast("No Shares", "No active member shares found.");
+    return;
+  }
+
+  const profitPerShare = totalProfit / totalShares;
+
+  db.profitDistributions.unshift({
+    id: genId("PROFIT"),
+    investmentId,
+    month,
+    totalProfit,
+    profitPerShare,
+    createdBy: SESSION.user.id,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("PROFIT_DISTRIBUTION", `Profit distributed for ${investmentId} month ${month}`);
+  toast("Profit Distributed", `Profit per share: ${profitPerShare.toFixed(2)}`);
+  renderProfitHistory();
+}
+
+function renderProfitHistory(){
+  const db = ensureDB();
+
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Investment</th>
+          <th>Month</th>
+          <th>Total Profit</th>
+          <th>Profit/Share</th>
+          <th>By</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${db.profitDistributions.map(p=>{
+          const inv = db.investments.find(x=>x.id===p.investmentId);
+          return `
+            <tr>
+              <td>${p.id}</td>
+              <td>${inv?inv.title:p.investmentId}</td>
+              <td>${p.month}</td>
+              <td>${fmtMoney(p.totalProfit)}</td>
+              <td>${fmtMoney(p.profitPerShare.toFixed(2))}</td>
+              <td>${p.createdBy}</td>
+            </tr>
+          `;
+        }).join("") || `<tr><td colspan="6" class="small">No profit distributions found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+
+  document.getElementById("profitTable").innerHTML = html;
+}
+
+/* -----------------------------
+   Member Profit View
+------------------------------*/
+function renderMemberProfit(){
+  const db = ensureDB();
+  const m = db.members.find(x=>x.id===SESSION.user.id);
+  setPage("Profit & Shares", "View profit per share and your total earnings.");
+
+  let totalProfit = 0;
+  const rows = db.profitDistributions.map(p=>{
+    const my = Number(p.profitPerShare) * Number(m.shares);
+    totalProfit += my;
+    const inv = db.investments.find(x=>x.id===p.investmentId);
+    return {p, my, inv};
+  });
+
+  const html = `
+    <div class="gridCards">
+      <div class="card">
+        <div class="tag">Shares</div>
+        <div class="title">My Shares</div>
+        <div class="value">${m.shares}</div>
+        <div class="sub">Share based profit system</div>
+      </div>
+      <div class="card">
+        <div class="tag">Profit</div>
+        <div class="title">Total Profit Earned</div>
+        <div class="value">${fmtMoney(totalProfit)}</div>
+        <div class="sub">All distributions included</div>
+      </div>
+      <div class="card">
+        <div class="tag">System</div>
+        <div class="title">Monthly Share Amount</div>
+        <div class="value">${fmtMoney(db.meta.monthlyShareAmount)}</div>
+        <div class="sub">Per share deposit requirement</div>
+      </div>
+      <div class="card">
+        <div class="tag">Members</div>
+        <div class="title">Total Members</div>
+        <div class="value">${db.members.length}</div>
+        <div class="sub">Active: ${db.members.filter(x=>x.status==="ACTIVE").length}</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Profit Distribution History</h3>
+          <p>Investment-wise profit earnings.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Month</th>
+            <th>Investment</th>
+            <th>Profit/Share</th>
+            <th>My Profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r=>`
+            <tr>
+              <td>${r.p.month}</td>
+              <td>${r.inv ? r.inv.title : r.p.investmentId}</td>
+              <td>${fmtMoney(Number(r.p.profitPerShare).toFixed(2))}</td>
+              <td><b>${fmtMoney(r.my.toFixed(2))}</b></td>
+            </tr>
+          `).join("") || `<tr><td colspan="4" class="small">No profit history.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Member Investments View
+------------------------------*/
+function renderMemberInvestments(){
+  const db = ensureDB();
+  setPage("Investments", "View all business investments and their performance summary.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Investments</h3>
+          <p>Where your money is invested. Performance overview.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Investment</th>
+            <th>Status</th>
+            <th>Total Expense</th>
+            <th>Total Sales</th>
+            <th>Net Profit</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${db.investments.map(inv=>{
+            const exp = db.expenses.filter(e=>e.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+            const sales = db.sales.filter(s=>s.investmentId===inv.id).reduce((a,b)=>a+Number(b.amount),0);
+            const profit = sales-exp;
+            return `
+              <tr>
+                <td><b>${inv.title}</b><div class="small">${inv.id} | ${inv.location}</div></td>
+                <td><span class="status ${inv.status==="RUNNING"?"st-approved":"st-rejected"}">${inv.status}</span></td>
+                <td>${fmtMoney(exp)}</td>
+                <td>${fmtMoney(sales)}</td>
+                <td>${fmtMoney(profit)}</td>
+              </tr>
+            `;
+          }).join("") || `<tr><td colspan="5" class="small">No investments found.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Notices (Admin + Member)
+------------------------------*/
+function renderAdminNotices(){
+  const db = ensureDB();
+  setPage("Notice Management", "Send notice to all members or specific member.");
+
+  const memberOptions = db.members.map(m=>`<option value="${m.id}">${m.name} (${m.id})</option>`).join("");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Create Notice</h3>
+          <p>Send notice to all members or selected member.</p>
+        </div>
+      </div>
+
+      <div class="row row-2">
+        <div>
+          <label>Title</label>
+          <input id="n_title" placeholder="Notice title..." />
+        </div>
+        <div>
+          <label>Target</label>
+          <select id="n_target">
+            <option value="ALL">ALL MEMBERS</option>
+            ${memberOptions}
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Message</label>
+          <textarea id="n_msg" placeholder="Write notice message..."></textarea>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn primary" onclick="sendNotice()">Send Notice</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Notice History</h3>
+          <p>All sent notices.</p>
+        </div>
+      </div>
+      <div id="noticeTable"></div>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+  renderNoticeTable();
+}
+
+function renderMemberNotices(){
+  const db = ensureDB();
+  setPage("Notices", "View system notices and announcements.");
+
+  const list = db.notices.filter(n=>n.target==="ALL" || n.target===SESSION.user.id);
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>My Notices</h3>
+          <p>All personal and general notices.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Title</th>
+            <th>Message</th>
+            <th>By</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(n=>`
+            <tr>
+              <td>${new Date(n.createdAt).toLocaleString()}</td>
+              <td><b>${n.title}</b><div class="small">${n.id}</div></td>
+              <td>${n.message}</td>
+              <td>${n.createdBy}</td>
+            </tr>
+          `).join("") || `<tr><td colspan="4" class="small">No notices found.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+function sendNotice(){
+  const db = ensureDB();
+  const title = document.getElementById("n_title").value.trim();
+  const target = document.getElementById("n_target").value;
+  const message = document.getElementById("n_msg").value.trim();
+
+  if(!title || !message){
+    toast("Validation Error", "Title and message required.");
+    return;
+  }
+
+  db.notices.unshift({
+    id: genId("NOTICE"),
+    title,
+    target,
+    message,
+    createdBy: SESSION.user.id,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("SEND_NOTICE", `Notice sent to ${target}`);
+  toast("Notice Sent", target==="ALL" ? "Sent to all members." : "Sent to " + target);
+  renderNoticeTable();
+}
+
+function renderNoticeTable(){
+  const db = ensureDB();
+  const html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Title</th>
+          <th>Target</th>
+          <th>Message</th>
+          <th>By</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${db.notices.map(n=>`
+          <tr>
+            <td>${new Date(n.createdAt).toLocaleString()}</td>
+            <td><b>${n.title}</b><div class="small">${n.id}</div></td>
+            <td>${n.target}</td>
+            <td>${n.message}</td>
+            <td>${n.createdBy}</td>
+          </tr>
+        `).join("") || `<tr><td colspan="5" class="small">No notices found.</td></tr>`}
+      </tbody>
+    </table>
+  `;
+  document.getElementById("noticeTable").innerHTML = html;
+}
+
+/* -----------------------------
+   Admin Resignation / Settlement
+------------------------------*/
+function renderAdminResign(){
+  const db = ensureDB();
+  setPage("Resignation & Settlement", "Track resigned members and settlement vouchers.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Resigned Members List</h3>
+          <p>Manage settlement voucher and due/payable.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Resign Date</th>
+            <th>Reason</th>
+            <th>Settlement Voucher</th>
+            <th>Amount</th>
+            <th>Tools</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${db.resignations.map(r=>{
+            const m = db.members.find(x=>x.id===r.memberId);
+            return `
+              <tr>
+                <td><b>${m?m.name:"Unknown"}</b><div class="small">${r.memberId}</div></td>
+                <td>${r.resignDate}</td>
+                <td>${r.reason}</td>
+                <td>${r.settlementVoucherId || "-"}</td>
+                <td>${fmtMoney(r.settlementAmount)}</td>
+                <td>
+                  <button class="btn primary" onclick="addSettlement('${r.id}')">Add Settlement</button>
+                </td>
+              </tr>
+            `;
+          }).join("") || `<tr><td colspan="6" class="small">No resignation records.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+async function addSettlement(resignId){
+  const db = ensureDB();
+  const r = db.resignations.find(x=>x.id===resignId);
+  if(!r) return;
+
+  const voucherId = prompt("Settlement Voucher ID?");
+  if(!voucherId) return;
+
+  const amount = Number(prompt("Settlement Amount?") || 0);
+  if(amount<=0){
+    toast("Invalid Amount", "Settlement amount must be greater than 0.");
+    return;
+  }
+
+  const docBase64 = prompt("Optional: paste document base64? (Skip)");
+  r.settlementVoucherId = voucherId;
+  r.settlementAmount = amount;
+  r.doc = docBase64 || "";
+  r.createdBy = SESSION.user.id;
+
+  saveDB(db);
+  logActivity("ADD_SETTLEMENT", `Settlement added ${voucherId} for resign ${r.memberId}`);
+  toast("Settlement Saved", "Settlement updated.");
+  renderAdminResign();
+}
+
+/* -----------------------------
+   Admin Reports
+------------------------------*/
+function renderAdminReports(){
+  const db = ensureDB();
+  setPage("Reports", "Monthly report, defaulter report, financial summary.");
+
+  const currentMonth = monthKey();
+  const activeMembers = db.members.filter(m=>m.status==="ACTIVE");
+  const totalShares = activeMembers.reduce((a,b)=>a+Number(b.shares),0);
+
+  const requiredTotal = totalShares * db.meta.monthlyShareAmount;
+
+  const paidThisMonth = db.deposits.filter(d=>d.status==="APPROVED" && d.month===currentMonth)
+    .reduce((a,b)=>a+Number(b.amount),0);
+
+  const dueThisMonth = requiredTotal - paidThisMonth;
+
+  const html = `
+    <div class="gridCards">
+      <div class="card">
+        <div class="tag">Month</div>
+        <div class="title">Current Month</div>
+        <div class="value">${currentMonth}</div>
+        <div class="sub">System report period</div>
+      </div>
+      <div class="card">
+        <div class="tag">Shares</div>
+        <div class="title">Total Active Shares</div>
+        <div class="value">${totalShares}</div>
+        <div class="sub">Active members share count</div>
+      </div>
+      <div class="card">
+        <div class="tag">Required</div>
+        <div class="title">Required Deposit</div>
+        <div class="value">${fmtMoney(requiredTotal)}</div>
+        <div class="sub">This month expected total</div>
+      </div>
+      <div class="card">
+        <div class="tag">Due</div>
+        <div class="title">Due Amount</div>
+        <div class="value">${fmtMoney(dueThisMonth)}</div>
+        <div class="sub">Expected - paid</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Defaulter List (This Month)</h3>
+          <p>Members who have not paid this month.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Shares</th>
+            <th>Due</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${activeMembers.map(m=>{
+            const paid = db.deposits.find(d=>d.memberId===m.id && d.month===currentMonth && d.status==="APPROVED");
+            if(paid) return "";
+            return `
+              <tr>
+                <td><b>${m.name}</b><div class="small">${m.id}</div></td>
+                <td>${m.shares}</td>
+                <td>${fmtMoney(m.shares * db.meta.monthlyShareAmount)}</td>
+                <td><span class="status st-rejected">UNPAID</span></td>
+              </tr>
+            `;
+          }).join("") || `<tr><td colspan="4" class="small">No defaulters.</td></tr>`}
+        </tbody>
+      </table>
+
+      <div class="hr"></div>
+      <button class="btn primary" onclick="exportJSON()">Export Full Backup JSON</button>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   Admin Accounts
+------------------------------*/
+function renderAdminAdmins(){
+  const db = ensureDB();
+  setPage("Admin Accounts", "Create and manage multiple admin accounts with roles.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>Create Admin Account</h3>
+          <p>Each admin has unique ID and role.</p>
+        </div>
+      </div>
+
+      <div class="row row-4">
+        <div>
+          <label>Admin ID</label>
+          <input id="a_id" placeholder="admin2" />
+        </div>
+        <div>
+          <label>Name</label>
+          <input id="a_name" placeholder="Admin Name" />
+        </div>
+        <div>
+          <label>Password</label>
+          <input id="a_pass" placeholder="password" />
+        </div>
+        <div>
+          <label>Role</label>
+          <select id="a_role">
+            <option value="SUPER_ADMIN">SUPER_ADMIN</option>
+            <option value="FINANCE_ADMIN">FINANCE_ADMIN</option>
+            <option value="INVEST_ADMIN">INVEST_ADMIN</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <button class="btn success" onclick="addAdmin()">Save Admin</button>
+    </div>
+
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>All Admins</h3>
+          <p>Admin list and roles.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Admin</th>
+            <th>Role</th>
+            <th>Status</th>
+            <th>Password</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${db.admins.map(a=>`
+            <tr>
+              <td><b>${a.name}</b><div class="small">${a.id}</div></td>
+              <td>${a.role}</td>
+              <td><span class="status ${a.active?"st-approved":"st-rejected"}">${a.active?"ACTIVE":"DISABLED"}</span></td>
+              <td>${a.pass}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+function addAdmin(){
+  const db = ensureDB();
+  const id = document.getElementById("a_id").value.trim();
+  const name = document.getElementById("a_name").value.trim();
+  const pass = document.getElementById("a_pass").value.trim();
+  const role = document.getElementById("a_role").value;
+
+  if(!id || !name || !pass){
+    toast("Validation Error", "ID, Name and Password required.");
+    return;
+  }
+
+  if(db.admins.find(x=>x.id===id)){
+    toast("Duplicate", "Admin ID already exists.");
+    return;
+  }
+
+  db.admins.unshift({
+    id, name, role, pass, active:true,
+    createdAt: nowISO()
+  });
+
+  saveDB(db);
+  logActivity("ADD_ADMIN", `Admin added: ${id}`);
+  toast("Admin Added", "New admin created successfully.");
+  renderAdminAdmins();
+}
+
+/* -----------------------------
+   Activity Logs
+------------------------------*/
+function renderAdminLogs(){
+  const db = ensureDB();
+  setPage("Activity Logs", "Track who did what. Signature system for approvals.");
+
+  const html = `
+    <div class="panel">
+      <div class="panelHeader">
+        <div>
+          <h3>System Activity Logs</h3>
+          <p>All actions recorded with timestamp.</p>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Action</th>
+            <th>By</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${db.activityLogs.slice(0,200).map(l=>`
+            <tr>
+              <td>${new Date(l.at).toLocaleString()}</td>
+              <td><b>${l.action}</b><div class="small">${l.id}</div></td>
+              <td>${l.byId}<div class="small">${l.byRole}</div></td>
+              <td>${l.details}</td>
+            </tr>
+          `).join("") || `<tr><td colspan="4" class="small">No logs found.</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("pageContent").innerHTML = html;
+}
+
+/* -----------------------------
+   System Tools
+------------------------------*/
+function exportJSON(){
+  const db = ensureDB();
+  const dataStr = JSON.stringify(db, null, 2);
+
+  const blob = new Blob([dataStr], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "IMS_ERP_V5_BACKUP.json";
+  a.click();
+
+  toast("Export Done", "Backup JSON file downloaded.");
+}
+
+function importJSONPrompt(){
+  const txt = prompt("Paste JSON Backup here:");
+  if(!txt) return;
+
+  try{
+    const obj = JSON.parse(txt);
+    localStorage.setItem(LS_KEY, JSON.stringify(obj));
+    toast("Import Success", "Backup restored successfully.");
+    logActivity("IMPORT_BACKUP", "System imported JSON backup");
+    closeModal("modalSystemTools");
+    startApp();
+  }catch(e){
+    toast("Import Failed", "Invalid JSON format.");
+  }
+}
+
+function resetDemo(){
+  if(!confirm("Reset demo database? All current data will be lost.")) return;
+  seedDB();
+  toast("Reset Done", "Demo database loaded.");
+  startApp();
+}
+
+function wipeAll(){
+  if(!confirm("⚠️ WARNING: Delete all ERP data permanently?")) return;
+  localStorage.removeItem(LS_KEY);
+  toast("Deleted", "All data wiped. Reloading demo...");
+  seedDB();
+  startApp();
+}
+
+/* -----------------------------
+   INIT
+------------------------------*/
+(function init(){
+ 
+// ======================
+// LOCAL STORAGE INIT
+// ======================
+
+let members = JSON.parse(localStorage.getItem("imsMembers")) || [];
+let deposits = JSON.parse(localStorage.getItem("imsDeposits")) || [];
+let investments = JSON.parse(localStorage.getItem("imsInvestments")) || [];
+let expenses = JSON.parse(localStorage.getItem("imsExpenses")) || [];
+let profits = JSON.parse(localStorage.getItem("imsProfits")) || [];
+let withdraws = JSON.parse(localStorage.getItem("imsWithdraws")) || [];
+let loans = JSON.parse(localStorage.getItem("imsLoans")) || [];
+let notices = JSON.parse(localStorage.getItem("imsNotices")) || [];
+let auditLog = JSON.parse(localStorage.getItem("imsAudit")) || [];
+let resigns = JSON.parse(localStorage.getItem("imsResign")) || [];
+let settings = JSON.parse(localStorage.getItem("imsSettings")) || {monthlyShare:10000};
+let currentUser = null;
+
+// ======================
+// DEFAULT ADMIN
+// ======================
+if(!localStorage.getItem("imsAdmins")){
+    let defaultAdmins = [
+        {username:"admin",password:"1234",role:"super"}
+    ];
+    localStorage.setItem("imsAdmins",JSON.stringify(defaultAdmins));
+}
+
+// ======================
+// LOGIN FUNCTION
+// ======================
+function login(){
+    let type = document.getElementById("loginType").value;
+    let user = document.getElementById("loginUser").value.trim();
+    let pass = document.getElementById("loginPass").value.trim();
+
+    if(type==="admin"){
+        let admins = JSON.parse(localStorage.getItem("imsAdmins"));
+        let found = admins.find(a=>a.username===user && a.password===pass);
+        if(found){
+            currentUser = {username:user,role:found.role,type:"admin"};
+            showApp("admin");
+        }else{
+            alert("Invalid Admin Credentials!");
+        }
+    }else{
+        let mem = members.find(m=>m.id===user && m.password===pass);
+        if(mem){
+            currentUser = {...mem,type:"member"};
+            showApp("member");
+        }else{
+            alert("Invalid Member Credentials!");
+        }
+    }
+}
+
+// ======================
+// SHOW APP
+// ======================
+function showApp(role){
+    document.getElementById("loginPage").style.display="none";
+    document.getElementById("mainApp").style.display="flex";
+
+    if(role==="admin"){
+        document.getElementById("adminMenu").style.display="block";
+        document.getElementById("memberMenu").style.display="none";
+        showScreen("adminDashboard");
+        loadAdminDashboard();
+        loadMembersTable();
+        loadDepositTable();
+        loadInvestmentsTable();
+        loadExpensesTable();
+        loadProfitTable();
+        loadResignTable();
+        loadNoticeTable();
+        loadAuditTable();
+        loadInvestSelect();
+        loadProfitInvestSelect();
+        loadResignMemberSelect();
+    }else{
+        document.getElementById("adminMenu").style.display="none";
+        document.getElementById("memberMenu").style.display="block";
+        showScreen("memberDashboard");
+        loadMemberDashboard();
+        loadMemberDepositHistory();
+        loadMemberLedger();
+        loadMemberProfit();
+        loadMemberProfile();
+        loadMemberNotices();
+        loadMemberWithdraw();
+        loadMemberLoan();
+    }
+}
+
+// ======================
+// LOGOUT
+// ======================
+function logout(){
+    if(confirm("Are you sure to logout?")){
+        location.reload();
+    }
+}
+
+// ======================
+// NAVIGATION
+// ======================
+function showScreen(screenId){
+    document.querySelectorAll(".screen").forEach(s=>s.style.display="none");
+    document.getElementById(screenId).style.display="block";
+    document.getElementById("pageTitle").innerText = document.querySelector(`#${screenId} .sectionTitle`)?.innerText || "Dashboard";
+}
+
+// ======================
+// ADD MEMBER
+// ======================
+function addMember(){
+    let id = "M"+(members.length+1).toString().padStart(3,"0");
+    let name = document.getElementById("memName").value.trim();
+    let phone = document.getElementById("memPhone").value.trim();
+    let email = document.getElementById("memEmail").value.trim();
+    let address = document.getElementById("memAddress").value.trim();
+    let shares = parseInt(document.getElementById("memShares").value) || 1;
+    let nid = document.getElementById("memNID").value.trim();
+
+    let nomName = document.getElementById("nomName").value.trim();
+    let nomPhone = document.getElementById("nomPhone").value.trim();
+    let nomRelation = document.getElementById("nomRelation").value.trim();
+
+    // Photo Base64
+    let memPhoto = document.getElementById("memPhoto").files[0];
+    let memNidPhoto = document.getElementById("memNidPhoto").files[0];
+    let nomPhoto = document.getElementById("nomPhoto").files[0];
+
+    if(!name || !phone) return alert("Name & Phone Required");
+
+    let reader = new FileReader();
+    reader.onload = function(e){
+        let memPhotoBase = e.target.result;
+
+        let reader2 = new FileReader();
+        reader2.onload = function(e2){
+            let memNidBase = e2.target.result;
+
+            let reader3 = new FileReader();
+            reader3.onload = function(e3){
+                let nomBase = e3.target.result;
+
+                let newMem = {
+                    id, name, phone, email, address, shares, nid, password:"1234",
+                    photo:memPhotoBase,nidPhoto:memNidBase,
+                    nominee:{name:nomName,phone:nomPhone,relation:nomRelation,photo:nomBase},
+                    status:"active",
+                    created:new Date().toISOString()
+                };
+                members.push(newMem);
+                localStorage.setItem("imsMembers",JSON.stringify(members));
+                audit("Add Member",`Added Member ${name}`,currentUser.username);
+                alert("Member Added: "+id);
+                loadMembersTable();
+            };
+            if(nomPhoto) reader3.readAsDataURL(nomPhoto); else reader3.onload({target:{result:""}}); 
+        };
+        if(memNidPhoto) reader2.readAsDataURL(memNidPhoto); else reader2.onload({target:{result:""}});
+    };
+    if(memPhoto) reader.readAsDataURL(memPhoto); else reader.onload({target:{result:""}});
+}
+
+// ======================
+// LOAD MEMBERS TABLE
+// ======================
+function loadMembersTable(){
+    let tbody = document.getElementById("memberTable");
+    tbody.innerHTML="";
+    members.forEach(m=>{
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${m.id}</td>
+            <td>${m.name}</td>
+            <td>${m.shares}</td>
+            <td>${m.phone}</td>
+            <td>${m.status}</td>
+            <td>
+                <button class="smallBtn info" onclick="viewMember('${m.id}')">View</button>
+                <button class="smallBtn warning" onclick="resetPass('${m.id}')">Reset Pass</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    loadAdminDashboard();
+}
+
+// ======================
+// RESET MEMBER PASSWORD
+// ======================
+function resetPass(memId){
+    let m = members.find(x=>x.id===memId);
+    if(m && confirm("Reset password to 1234?")){
+        m.password="1234";
+        localStorage.setItem("imsMembers",JSON.stringify(members));
+        audit("Reset Password",`Reset password for ${m.name}`,currentUser.username);
+        alert("Password Reset to 1234");
+    }
+}
+
+// ======================
+// AUDIT LOG
+// ======================
+function audit(action,detail,user){
+    auditLog.push({date:new Date().toISOString(),action,details:detail,user});
+    localStorage.setItem("imsAudit",JSON.stringify(auditLog));
+}
+
+// ======================
+// LOAD ADMIN DASHBOARD
+// ======================
+function loadAdminDashboard(){
+    document.getElementById("admTotalMembers").innerText = members.length;
+    document.getElementById("admTotalDeposits").innerText = deposits.reduce((a,b)=>a+b.amount,0);
+    let month = new Date().toISOString().slice(0,7);
+    document.getElementById("admMonthDeposits").innerText = deposits.filter(d=>d.month===month).reduce((a,b)=>a+b.amount,0);
+    document.getElementById("admTotalExpense").innerText = expenses.reduce((a,b)=>a+b.amount,0);
+    document.getElementById("admTotalInvest").innerText = investments.reduce((a,b)=>a+b.capital,0);
+    document.getElementById("admTotalProfit").innerText = profits.reduce((a,b)=>a+b.amount,0);
+}
+
+// ======================
+// LOAD INVESTMENTS TABLE
+// ======================
+function loadInvestmentsTable(){
+    let tbody = document.getElementById("investmentTable");
+    tbody.innerHTML="";
+    investments.forEach(inv=>{
+        let sales = inv.sales||0;
+        let expense = inv.expense||0;
+        let profit = inv.profit||0;
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${inv.id}</td>
+            <td>${inv.title}</td>
+            <td>${inv.capital}</td>
+            <td>${sales}</td>
+            <td>${expense}</td>
+            <td>${profit}</td>
+            <td><span class="tag ${inv.status==='running'?'tagRunning':'tagClosed'}">${inv.status}</span></td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// CREATE INVESTMENT
+// ======================
+function addInvestment(){
+    let id = "I"+(investments.length+1).toString().padStart(3,"0");
+    let title = document.getElementById("invTitle").value.trim();
+    let location = document.getElementById("invLocation").value.trim();
+    let capital = parseFloat(document.getElementById("invCapital").value) || 0;
+    let details = document.getElementById("invDetails").value.trim();
+    let docFile = document.getElementById("invDocs").files[0];
+
+    if(!title || !capital) return alert("Title & Capital required");
+
+    let reader = new FileReader();
+    reader.onload=function(e){
+        let docBase = e.target.result;
+        let inv = {id,title,location,capital,details,doc:docBase,status:"running",sales:0,expense:0,profit:0};
+        investments.push(inv);
+        localStorage.setItem("imsInvestments",JSON.stringify(investments));
+        audit("Create Investment",`Created Investment ${title}`,currentUser.username);
+        alert("Investment Created: "+id);
+        loadInvestmentsTable();
+        loadInvestSelect();
+        loadProfitInvestSelect();
+    };
+    if(docFile) reader.readAsDataURL(docFile); else reader.onload({target:{result:""}});
+}
+
+// ======================
+// LOAD INVESTMENT SELECT
+// ======================
+function loadInvestSelect(){
+    let sel = document.getElementById("expInvestment");
+    if(!sel) return;
+    sel.innerHTML="";
+    investments.forEach(i=>{
+        let opt = document.createElement("option");
+        opt.value=i.id;
+        opt.innerText=i.title;
+        sel.appendChild(opt);
+    });
+}
+function loadProfitInvestSelect(){
+    let sel = document.getElementById("profitInvestment");
+    if(!sel) return;
+    sel.innerHTML="";
+    investments.forEach(i=>{
+        let opt = document.createElement("option");
+        opt.value=i.id;
+        opt.innerText=i.title;
+        sel.appendChild(opt);
+    });
+}
+function loadResignMemberSelect(){
+    let sel = document.getElementById("resignMember");
+    if(!sel) return;
+    sel.innerHTML="";
+    members.forEach(m=>{
+        if(m.status==="active"){
+            let opt = document.createElement("option");
+            opt.value=m.id;
+            opt.innerText=m.name;
+            sel.appendChild(opt);
+        }
+    });
+}
+
+// ======================
+// ADD EXPENSE
+// ======================
+function addExpense(){
+    let invId = document.getElementById("expInvestment").value;
+    let amount = parseFloat(document.getElementById("expAmount").value) || 0;
+    let category = document.getElementById("expCategory").value.trim();
+    let date = document.getElementById("expDate").value;
+    let note = document.getElementById("expNote").value.trim();
+    let file = document.getElementById("expVoucher").files[0];
+
+    if(!invId || !amount) return alert("Investment & Amount required");
+
+    let reader = new FileReader();
+    reader.onload = function(e){
+        let doc = e.target.result;
+        let exp = {id:"V"+(expenses.length+1).toString().padStart(3,"0"),invId,amount,category,date,doc,note,addedBy:currentUser.username};
+        expenses.push(exp);
+        localStorage.setItem("imsExpenses",JSON.stringify(expenses));
+        let inv = investments.find(i=>i.id===invId);
+        inv.expense = (inv.expense||0)+amount;
+        localStorage.setItem("imsInvestments",JSON.stringify(investments));
+        audit("Add Expense",`Added Expense ${amount} to ${inv.title}`,currentUser.username);
+        alert("Expense Added: "+exp.id);
+        loadExpensesTable();
+        loadInvestmentsTable();
+    };
+    if(file) reader.readAsDataURL(file); else reader.onload({target:{result:""}});
+}
+
+// ======================
+// LOAD EXPENSES TABLE
+// ======================
+function loadExpensesTable(){
+    let tbody = document.getElementById("expenseTable");
+    tbody.innerHTML="";
+    expenses.forEach(e=>{
+        let inv = investments.find(i=>i.id===e.invId);
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${e.id}</td>
+            <td>${inv?inv.title:"N/A"}</td>
+            <td>${e.amount}</td>
+            <td>${e.date}</td>
+            <td>${e.category}</td>
+            <td>${e.addedBy}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// DISTRIBUTE PROFIT
+// ======================
+function distributeProfit(){
+    let invId = document.getElementById("profitInvestment").value;
+    let amount = parseFloat(document.getElementById("profitAmount").value) || 0;
+    let month = document.getElementById("profitMonth").value;
+
+    if(!invId || !amount || !month) return alert("Investment, Amount & Month required");
+
+    let profitId = "P"+(profits.length+1).toString().padStart(3,"0");
+
+    profits.push({id:profitId,invId,amount,month,distributedBy:currentUser.username});
+    localStorage.setItem("imsProfits",JSON.stringify(profits));
+
+    let totalShares = members.reduce((a,b)=>a+b.shares,0);
+    members.forEach(m=>{
+        let memProfit = (m.shares/totalShares)*amount;
+        if(!m.ledger)m.ledger=[];
+        m.ledger.push({date:new Date().toISOString(),type:"profit",debit:0,credit:memProfit,balance:0,ref:profitId});
+    });
+    localStorage.setItem("imsMembers",JSON.stringify(members));
+
+    let inv = investments.find(i=>i.id===invId);
+    inv.profit = (inv.profit||0)+amount;
+    localStorage.setItem("imsInvestments",JSON.stringify(investments));
+
+    audit("Distribute Profit",`Distributed ${amount} profit for ${inv.title}`,currentUser.username);
+    alert("Profit Distributed!");
+    loadProfitTable();
+    loadInvestmentsTable();
+}
+
+// ======================
+// LOAD PROFIT TABLE
+// ======================
+function loadProfitTable(){
+    let tbody = document.getElementById("profitTable");
+    tbody.innerHTML="";
+    profits.forEach(p=>{
+        let inv = investments.find(i=>i.id===p.invId);
+        let tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${p.id}</td>
+            <td>${inv?inv.title:"N/A"}</td>
+            <td>${p.month}</td>
+            <td>${p.amount}</td>
+            <td>${p.distributedBy}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// MEMBER DASHBOARD
+// ======================
+function loadMemberDashboard(){
+    document.getElementById("memTotalShares").innerText = currentUser.shares;
+    let totalDeposit = deposits.filter(d=>d.memberId===currentUser.id && d.status==="approved").reduce((a,b)=>a+b.amount,0);
+    document.getElementById("memTotalDeposit").innerText = totalDeposit;
+    let totalProfit = currentUser.ledger?currentUser.ledger.filter(l=>l.type==="profit").reduce((a,b)=>a+b.credit,0):0;
+    document.getElementById("memProfitEarned").innerText = totalProfit;
+    let due = settings.monthlyShare*currentUser.shares - totalDeposit;
+    document.getElementById("memDue").innerText = due;
+}
+
+// ======================
+// MEMBER DEPOSIT SUBMIT
+// ======================
+function submitDeposit(){
+    let month = document.getElementById("depMonth").value;
+    let amount = parseFloat(document.getElementById("depAmount").value)||0;
+    let bank = document.getElementById("depBank").value.trim();
+    let txn = document.getElementById("depTxn").value.trim();
+    let note = document.getElementById("depNote").value.trim();
+    let file = document.getElementById("depSlip").files[0];
+
+    if(!month || !amount || !txn) return alert("Month, Amount & Transaction ID required");
+
+    let reader = new FileReader();
+    reader.onload = function(e){
+        let doc = e.target.result;
+        let depId = "D"+(deposits.length+1).toString().padStart(3,"0");
+        deposits.push({id:depId,memberId:currentUser.id,month,amount,bank,txn,status:"pending",slip:doc});
+        localStorage.setItem("imsDeposits",JSON.stringify(deposits));
+        audit("Deposit Submitted",`Member ${currentUser.name} submitted deposit ${amount}`,currentUser.id);
+        alert("Deposit Submitted, Pending Approval");
+        loadMemberDepositHistory();
+        loadAdminDashboard();
+    };
+    if(file) reader.readAsDataURL(file); else reader.onload({target:{result:""}});
+}
+
+// ======================
+// LOAD MEMBER DEPOSIT HISTORY
+// ======================
+function loadMemberDepositHistory(){
+    let tbody = document.getElementById("memberDepositTable");
+    tbody.innerHTML="";
+    deposits.filter(d=>d.memberId===currentUser.id).forEach(d=>{
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${d.id}</td><td>${d.month}</td><td>${d.amount}</td><td>${d.txn}</td><td>${d.status}</td><td>${d.mrId||""}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// LOAD LEDGER
+// ======================
+function loadMemberLedger(){
+    let tbody = document.getElementById("ledgerTable");
+    tbody.innerHTML="";
+    let ledger = currentUser.ledger||[];
+    let balance=0;
+    ledger.forEach(l=>{
+        balance += (l.credit||0)-(l.debit||0);
+        l.balance = balance;
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${l.date}</td><td>${l.type}</td><td>${l.debit}</td><td>${l.credit}</td><td>${balance}</td><td>${l.ref}</td>`;
+        tbody.appendChild(tr);
+    });
+    // save ledger back
+    let idx = members.findIndex(m=>m.id===currentUser.id);
+    members[idx]=currentUser;
+    localStorage.setItem("imsMembers",JSON.stringify(members));
+}
+
+// ======================
+// LOAD MEMBER PROFIT
+// ======================
+function loadMemberProfit(){
+    let tbody = document.getElementById("memberProfitTable");
+    tbody.innerHTML="";
+    let ledger = currentUser.ledger||[];
+    ledger.filter(l=>l.type==="profit").forEach(l=>{
+        let inv = investments.find(i=>i.id===l.ref);
+        let tr = document.createElement("tr");
+        tr.innerHTML = `<td>${l.date.slice(0,7)}</td><td>${inv?inv.title:"N/A"}</td><td>${l.credit}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// LOAD MEMBER PROFILE
+// ======================
+function loadMemberProfile(){
+    document.getElementById("profileName").innerText = currentUser.name;
+    document.getElementById("profileInfo").innerText = `Phone: ${currentUser.phone}\nEmail: ${currentUser.email}\nAddress: ${currentUser.address}`;
+    document.getElementById("profileImg").src = currentUser.photo || "";
+    document.getElementById("updName").value=currentUser.name;
+    document.getElementById("updPhone").value=currentUser.phone;
+    document.getElementById("updEmail").value=currentUser.email;
+    document.getElementById("updAddress").value=currentUser.address;
+}
+
+// ======================
+// UPDATE PROFILE
+// ======================
+function updateProfile(){
+    let idx = members.findIndex(m=>m.id===currentUser.id);
+    if(idx===-1) return;
+    let name=document.getElementById("updName").value.trim();
+    let phone=document.getElementById("updPhone").value.trim();
+    let email=document.getElementById("updEmail").value.trim();
+    let address=document.getElementById("updAddress").value.trim();
+    let photoFile=document.getElementById("updPhoto").files[0];
+
+    if(photoFile){
+        let reader=new FileReader();
+        reader.onload=function(e){
+            members[idx].photo=e.target.result;
+            saveProfileUpdate();
+        };
+        reader.readAsDataURL(photoFile);
+    }else saveProfileUpdate();
+
+    function saveProfileUpdate(){
+        members[idx].name=name;
+        members[idx].phone=phone;
+        members[idx].email=email;
+        members[idx].address=address;
+        localStorage.setItem("imsMembers",JSON.stringify(members));
+        currentUser=members[idx];
+        loadMemberProfile();
+        audit("Profile Update",`Member ${name} updated profile`,currentUser.id);
+        alert("Profile Updated");
+    }
+}
+
+// ======================
+// SETTINGS
+// ======================
+function saveSettings(){
+    let val=parseFloat(document.getElementById("setMonthlyShare").value)||10000;
+    settings.monthlyShare=val;
+    localStorage.setItem("imsSettings",JSON.stringify(settings));
+    alert("Settings Saved");
+    loadAdminDashboard();
+}
+
+// ======================
+// BACKUP / RESTORE
+// ======================
+function backupData(){
+    let data = {members,deposits,investments,expenses,profits,withdraws,loans,notices,auditLog,resigns,settings};
+    let blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+    let url = URL.createObjectURL(blob);
+    let a = document.createElement("a");
+    a.href=url; a.download="ims_v5_backup.json"; a.click();
+}
+
+function restoreData(){
+    let file = document.getElementById("restoreFile").files[0];
+    if(!file) return alert("Select JSON file");
+    let reader = new FileReader();
+    reader.onload=function(e){
+        let data=JSON.parse(e.target.result);
+        members=data.members||[];
+        deposits=data.deposits||[];
+        investments=data.investments||[];
+        expenses=data.expenses||[];
+        profits=data.profits||[];
+        withdraws=data.withdraws||[];
+        loans=data.loans||[];
+        notices=data.notices||[];
+        auditLog=data.auditLog||[];
+        resigns=data.resigns||[];
+        settings=data.settings||{monthlyShare:10000};
+        localStorage.setItem("imsMembers",JSON.stringify(members));
+        localStorage.setItem("imsDeposits",JSON.stringify(deposits));
+        localStorage.setItem("imsInvestments",JSON.stringify(investments));
+        localStorage.setItem("imsExpenses",JSON.stringify(expenses));
+        localStorage.setItem("imsProfits",JSON.stringify(profits));
+        localStorage.setItem("imsWithdraws",JSON.stringify(withdraws));
+        localStorage.setItem("imsLoans",JSON.stringify(loans));
+        localStorage.setItem("imsNotices",JSON.stringify(notices));
+        localStorage.setItem("imsAudit",JSON.stringify(auditLog));
+        localStorage.setItem("imsResign",JSON.stringify(resigns));
+        localStorage.setItem("imsSettings",JSON.stringify(settings));
+        alert("Restore Completed!");
+        location.reload();
+    };
+    reader.readAsText(file);
+}
+
+// ======================
+// AUDIT TABLE
+// ======================
+function loadAuditTable(){
+    let tbody = document.getElementById("auditTable");
+    tbody.innerHTML="";
+    auditLog.forEach(a=>{
+        let tr=document.createElement("tr");
+        tr.innerHTML = `<td>${a.date}</td><td>${a.action}</td><td>${a.details}</td><td>${a.user}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// NOTICE MANAGEMENT
+// ======================
+function addNotice(){
+    let title=document.getElementById("noticeTitle").value.trim();
+    let msg=document.getElementById("noticeMsg").value.trim();
+    if(!title||!msg) return alert("Title & Message required");
+    notices.push({date:new Date().toISOString(),title,msg,sentBy:currentUser.username});
+    localStorage.setItem("imsNotices",JSON.stringify(notices));
+    audit("Notice Sent",`Title: ${title}`,currentUser.username);
+    alert("Notice Sent!");
+    loadNoticeTable();
+}
+function loadNoticeTable(){
+    let tbody = document.getElementById("noticeTable");
+    tbody.innerHTML="";
+    notices.forEach(n=>{
+        let tr=document.createElement("tr");
+        tr.innerHTML=`<td>${n.date}</td><td>${n.title}</td><td>${n.msg}</td><td>${n.sentBy}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+function loadMemberNotices(){
+    let box=document.getElementById("noticeBox");
+    box.innerHTML="";
+    notices.forEach(n=>{
+        let div=document.createElement("div");
+        div.className="noteBox";
+        div.innerHTML=`<b>${n.title}</b><br>${n.msg}<br><i class="muted">${n.date}</i>`;
+        box.appendChild(div);
+    });
+}
+
+// ======================
+// ADDITIONAL FUNCTIONS: Withdraw / Loan / Resign / Reports
+// ======================
+// For brevity, you can add these functions similar to deposit/profit logic
+// withdraws, loans, resigns handling follows same pattern
+// ======================
+// MEMBER WITHDRAW
+// ======================
+function submitWithdraw(){
+    let amount=parseFloat(document.getElementById("withdrawAmount").value)||0;
+    let note=document.getElementById("withdrawNote").value.trim();
+    if(!amount || amount<=0) return alert("Enter valid amount");
+
+    let balance=currentUser.ledger?.reduce((a,b)=>a.credit-a.debit+a.balance,0) || 0;
+    if(amount>balance) return alert("Insufficient balance");
+
+    let wid="W"+(withdraws.length+1).toString().padStart(3,"0");
+    withdraws.push({id:wid,memberId:currentUser.id,amount,note,status:"pending",date:new Date().toISOString()});
+    localStorage.setItem("imsWithdraws",JSON.stringify(withdraws));
+    audit("Withdraw Requested",`Member ${currentUser.name} requested ${amount}`,currentUser.id);
+    alert("Withdraw Requested, Pending Approval");
+}
+
+// ======================
+// ADMIN APPROVE/REJECT WITHDRAW
+// ======================
+function loadWithdrawTable(){
+    let tbody=document.getElementById("withdrawTable");
+    tbody.innerHTML="";
+    withdraws.forEach(w=>{
+        let mem=members.find(m=>m.id===w.memberId);
+        let tr=document.createElement("tr");
+        tr.innerHTML=`<td>${w.id}</td><td>${mem?mem.name:"N/A"}</td><td>${w.amount}</td><td>${w.status}</td>
+        <td>${w.date}</td>
+        <td>
+            ${w.status==="pending"?`<button class="smallBtn success" onclick="approveWithdraw('${w.id}')">Approve</button>
+            <button class="smallBtn danger" onclick="rejectWithdraw('${w.id}')">Reject</button>`:""}
+        </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function approveWithdraw(wid){
+    let w=withdraws.find(x=>x.id===wid);
+    if(!w) return;
+    w.status="approved";
+    localStorage.setItem("imsWithdraws",JSON.stringify(withdraws));
+
+    // Ledger update
+    let mem=members.find(m=>m.id===w.memberId);
+    if(!mem.ledger) mem.ledger=[];
+    mem.ledger.push({date:new Date().toISOString(),type:"withdraw",debit:w.amount,credit:0,balance:0,ref:wid});
+    localStorage.setItem("imsMembers",JSON.stringify(members));
+
+    audit("Withdraw Approved",`Approved ${w.amount} for ${mem.name}`,currentUser.username);
+    alert("Withdraw Approved");
+    loadWithdrawTable();
+    loadAdminDashboard();
+}
+
+function rejectWithdraw(wid){
+    let w=withdraws.find(x=>x.id===wid);
+    if(!w) return;
+    w.status="rejected";
+    localStorage.setItem("imsWithdraws",JSON.stringify(withdraws));
+    audit("Withdraw Rejected",`Rejected ${w.amount} for ${w.memberId}`,currentUser.username);
+    alert("Withdraw Rejected");
+    loadWithdrawTable();
+}
+
+// ======================
+// LOAN REQUEST
+// ======================
+function submitLoan(){
+    let amount=parseFloat(document.getElementById("loanAmount").value)||0;
+    let note=document.getElementById("loanNote").value.trim();
+    if(!amount || amount<=0) return alert("Enter valid amount");
+
+    let lid="L"+(loans.length+1).toString().padStart(3,"0");
+    loans.push({id:lid,memberId:currentUser.id,amount,note,status:"pending",date:new Date().toISOString()});
+    localStorage.setItem("imsLoans",JSON.stringify(loans));
+    audit("Loan Requested",`Member ${currentUser.name} requested loan ${amount}`,currentUser.id);
+    alert("Loan Requested, Pending Approval");
+}
+
+// ======================
+// ADMIN APPROVE/REJECT LOAN
+// ======================
+function loadLoanTable(){
+    let tbody=document.getElementById("loanTable");
+    tbody.innerHTML="";
+    loans.forEach(l=>{
+        let mem=members.find(m=>m.id===l.memberId);
+        let tr=document.createElement("tr");
+        tr.innerHTML=`<td>${l.id}</td><td>${mem?mem.name:"N/A"}</td><td>${l.amount}</td><td>${l.status}</td><td>${l.date}</td>
+        <td>
+            ${l.status==="pending"?`<button class="smallBtn success" onclick="approveLoan('${l.id}')">Approve</button>
+            <button class="smallBtn danger" onclick="rejectLoan('${l.id}')">Reject</button>`:""}
+        </td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function approveLoan(lid){
+    let l=loans.find(x=>x.id===lid);
+    if(!l) return;
+    l.status="approved";
+    localStorage.setItem("imsLoans",JSON.stringify(loans));
+
+    // Ledger update
+    let mem=members.find(m=>m.id===l.memberId);
+    if(!mem.ledger) mem.ledger=[];
+    mem.ledger.push({date:new Date().toISOString(),type:"loan",debit:0,credit:l.amount,balance:0,ref:lid});
+    localStorage.setItem("imsMembers",JSON.stringify(members));
+
+    audit("Loan Approved",`Approved ${l.amount} loan for ${mem.name}`,currentUser.username);
+    alert("Loan Approved");
+    loadLoanTable();
+    loadAdminDashboard();
+}
+
+function rejectLoan(lid){
+    let l=loans.find(x=>x.id===lid);
+    if(!l) return;
+    l.status="rejected";
+    localStorage.setItem("imsLoans",JSON.stringify(loans));
+    audit("Loan Rejected",`Rejected ${l.amount} for ${l.memberId}`,currentUser.username);
+    alert("Loan Rejected");
+    loadLoanTable();
+}
+
+// ======================
+// MEMBER RESIGN
+// ======================
+function resignMember(){
+    let memId=document.getElementById("resignMember").value;
+    if(!memId) return alert("Select Member");
+
+    let reason=document.getElementById("resignReason").value.trim();
+    if(!reason) return alert("Enter reason");
+
+    let idx=members.findIndex(m=>m.id===memId);
+    members[idx].status="resigned";
+    localStorage.setItem("imsMembers",JSON.stringify(members));
+
+    resigns.push({memberId:memId,reason,date:new Date().toISOString(),settled:false});
+    localStorage.setItem("imsResign",JSON.stringify(resigns));
+    audit("Member Resigned",`Member ${members[idx].name} resigned`,currentUser.username);
+    alert("Member Resigned");
+    loadResignTable();
+    loadMembersTable();
+}
+
+// ======================
+// RESIGN SETTLEMENT
+// ======================
+function settleResign(memberId){
+    let r=resigns.find(r=>r.memberId===memberId);
+    if(!r) return;
+    r.settled=true;
+    localStorage.setItem("imsResign",JSON.stringify(resigns));
+
+    // Optional: Ledger adjustments
+    audit("Resign Settled",`Resign settlement completed for ${memberId}`,currentUser.username);
+    alert("Resign Settlement Done");
+    loadResignTable();
+}
+
+function loadResignTable(){
+    let tbody=document.getElementById("resignTable");
+    tbody.innerHTML="";
+    resigns.forEach(r=>{
+        let mem=members.find(m=>m.id===r.memberId);
+        let tr=document.createElement("tr");
+        tr.innerHTML=`<td>${r.memberId}</td><td>${mem?mem.name:"N/A"}</td><td>${r.reason}</td><td>${r.date}</td><td>${r.settled?"Yes":"No"}</td>
+        <td>${!r.settled?`<button class="smallBtn success" onclick="settleResign('${r.memberId}')">Settle</button>`:""}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+// ======================
+// PRINT-READY REPORTS
+// ======================
+function printReport(type){
+    let content="";
+    if(type==="members"){
+        content="<h2>Members Report</h2><table border='1'><tr><th>ID</th><th>Name</th><th>Shares</th><th>Status</th></tr>";
+        members.forEach(m=>content+=`<tr><td>${m.id}</td><td>${m.name}</td><td>${m.shares}</td><td>${m.status}</td></tr>`);
+        content+="</table>";
+    }
+    else if(type==="deposits"){
+        content="<h2>Deposits Report</h2><table border='1'><tr><th>ID</th><th>Member</th><th>Amount</th><th>Status</th></tr>";
+        deposits.forEach(d=>{let mem=members.find(m=>m.id===d.memberId);content+=`<tr><td>${d.id}</td><td>${mem?mem.name:"N/A"}</td><td>${d.amount}</td><td>${d.status}</td></tr>`});
+        content+="</table>";
+    }
+    else if(type==="profits"){
+        content="<h2>Profits Report</h2><table border='1'><tr><th>ID</th><th>Investment</th><th>Amount</th><th>Month</th></tr>";
+        profits.forEach(p=>{let inv=investments.find(i=>i.id===p.invId);content+=`<tr><td>${p.id}</td><td>${inv?inv.title:"N/A"}</td><td>${p.amount}</td><td>${p.month}</td></tr>`});
+        content+="</table>";
+    }
+    let w=window.open();
+    w.document.write(content);
+    w.print();
+}
+
