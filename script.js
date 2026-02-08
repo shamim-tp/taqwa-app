@@ -276,9 +276,9 @@ function seedDB() {
       whatsappNumber: "+8801234567890"
     },
     admins: [
-      { id: "ADM-001", name: "Super Admin", role: "SUPER_ADMIN", pass: "admin123", active: true, createdAt: nowISO() },
-      { id: "ADM-002", name: "Finance Admin", role: "FINANCE_ADMIN", pass: "finance123", active: true, createdAt: nowISO() },
-      { id: "ADM-003", name: "Accounts Admin", role: "ACCOUNTS_ADMIN", pass: "accounts123", active: true, createdAt: nowISO() },
+      { id: "ADM-001", name: "Super Admin", role: "SUPER_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+      { id: "ADM-002", name: "Finance Admin", role: "FINANCE_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+      { id: "ADM-003", name: "Accounts Admin", role: "ACCOUNTS_ADMIN", pass: "123", active: true, createdAt: nowISO() },
     ],
     members: [
       {
