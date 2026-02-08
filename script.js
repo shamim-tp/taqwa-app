@@ -275,13 +275,11 @@ function seedDB() {
       companyEmail: "info@imsinvestment.com",
       whatsappNumber: "+8801234567890"
     },
- // এডমিনদের অ্যারে
-const admins = [
-     { id: "admin", name: "Super Admin", role: "SUPER_ADMIN", pass: "123", active: true, createdAt: nowISO() },
-     { id: "ADM-002", name: "Finance Admin", role: "FINANCE_ADMIN", pass: "123", active: true, createdAt: nowISO() },
-     { id: "ADM-003", name: "Accounts Admin", role: "ACCOUNTS_ADMIN", pass: "123", active: true, createdAt: nowISO() },
-   ];
-
+    admins: [
+      { id: "ADM-001", name: "Super Admin", role: "SUPER_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+      { id: "ADM-002", name: "Finance Admin", role: "FINANCE_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+      { id: "ADM-003", name: "Accounts Admin", role: "ACCOUNTS_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+    ],
     members: [
       {
         id: "FM-001",
