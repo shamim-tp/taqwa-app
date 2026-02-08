@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>IMS ERP V5 Ultra Advanced (LocalStorage)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- TOAST -->
+<div class="toastWrap" id="toastWrap"></div>
+
+<!-- LOGIN -->
+<div id="loginPage" class="loginWrap">
+  <div class="loginCard">
+    <div class="loginGrid">
+      <div class="loginLeft">
+        <h1>IMS ERP V5 Ultra Advanced</h1>
+        <p>
+          Professional Investment Management ERP System (Browser Based) <br/>
+          <b>LocalStorage Database</b> | Multi Admin | Member System | Investment Profit | Voucher & Expense
+        </p>
+
+        <div class="hint">
+          <b>Default Admin Login:</b><br/>
+          ID: <b>admin</b><br/>
+          Password: <b>admin123</b><br/><br/>
+          <b>Default Member Login:</b> (Demo)<br/>
+          ID: <b>FM-001</b> (Founder Member)<br/>
+          Password: <b>1234</b>
+        </div>
+
+        <div class="kpiBox">
+          <div class="kpi">✔ Multi Admin Role</div>
+          <div class="kpi">✔ Investment Profit System</div>
+          <div class="kpi">✔ Deposit Slip Upload</div>
+          <div class="kpi">✔ MR ID + Voucher ID</div>
+          <div class="kpi">✔ Auto Notifications</div>
+        </div>
+      </div>
+
+      <div class="loginRight">
+        <div class="tabs">
+          <button id="tabAdmin" class="active">Admin Login</button>
+          <button id="tabMember">Member Login</button>
+        </div>
+
+        <div class="row">
+          <div>
+            <label id="loginIdLabel">Admin ID</label>
+            <input id="loginId" placeholder="Enter ID (admin / FM-001)" />
+          </div>
+          <div>
+            <label>Password</label>
+            <input id="loginPass" type="password" placeholder="Enter Password" />
+          </div>
+
+          <button class="btn primary" id="loginBtn">Login</button>
+
+          <div class="hint">
+            🔒 This ERP runs fully offline. All data stored in browser LocalStorage.
+            <br/><br/>
+            ⚠️ If you clear browser data, all records will be deleted.
+          </div>
+        </div>
+
+        <div class="footerNote">
+          Version: <b>V5 Ultra Advanced ERP</b> | Developed for Business Investment System
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- APP -->
+<div id="appPage" class="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="brand">
+      <div>
+        <h2>IMS ERP V5</h2>
+        <div class="small">Ultra Advanced Panel</div>
+      </div>
+      <div class="badge" id="systemMode">ADMIN</div>
+    </div>
+
+    <div class="userBox">
+      <div class="name" id="currentUserName">-</div>
+      <div class="role" id="currentUserRole">-</div>
+      <div class="mini">
+        <span class="chip" id="chipId">ID: -</span>
+        <span class="chip" id="chipStatus">Active</span>
+      </div>
+    </div>
+
+    <div class="navTitle">Navigation</div>
+    <div class="nav" id="sidebarNav"></div>
+
+    <button class="logoutBtn" id="logoutBtn">Logout</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <div class="topbar">
+      <div>
+        <h1 id="pageTitle">Dashboard</h1>
+        <p id="pageSubtitle">Welcome to IMS ERP V5 Ultra Advanced.</p>
+      </div>
+
+      <div class="rightTop">
+        <button class="btn" id="systemToolsBtn" style="display:none;">System Tools</button>
+        <button class="btn primary" id="quickAddBtn" style="display:none;">Quick Add</button>
+      </div>
+    </div>
+
+    <div id="pageContent"></div>
+
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modalWrap" id="modalQuickAdd">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>Quick Add</h2>
+        <p>Quick actions: Add Member, Add Investment, Add Expense, Send Notice</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+
+    <div class="row row-2">
+      <button class="btn success" data-action="addMember">➕ Add Member</button>
+      <button class="btn success" data-action="addInvestment">➕ Add Investment</button>
+      <button class="btn warn" data-action="addExpense">➕ Add Expense</button>
+      <button class="btn primary" data-action="sendNotice">📢 Send Notice</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="hint">
+      Quick Add is available for Admin role only. Members can submit deposit and view profile.
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalSystemTools">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>System Tools</h2>
+        <p>Backup/Restore, Reset Demo Data, Export JSON</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+
+    <div class="row row-2">
+      <button class="btn primary" id="exportJSONBtn">Export Backup JSON</button>
+      <button class="btn" id="importJSONBtn">Import Backup JSON</button>
+      <button class="btn warn" id="resetDemoBtn">Reset Demo Data</button>
+      <button class="btn danger" id="wipeAllBtn">Wipe All Data</button>
+    </div>
+
+    <div class="hr"></div>
+    <div class="hint">
+      ⚠️ Export JSON recommended every month.  
+      LocalStorage reset হলে সব ডেটা চলে যাবে।
+    </div>
+  </div>
+</div>
+
+<div class="modalWrap" id="modalViewer">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2 id="viewerTitle">Viewer</h2>
+        <p id="viewerSub">Details Preview</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+    <div id="viewerBody"></div>
+  </div>
+</div>
+
+<!-- Deposit Confirmation Modal -->
+<div class="modalWrap" id="modalDepositConfirm">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>Confirm Deposit Submission</h2>
+        <p>Please verify your deposit information before submitting</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+    
+    <div id="depositConfirmContent"></div>
+    
+    <div class="hr"></div>
+    
+    <div class="row row-2">
+      <button class="btn">Cancel</button>
+      <button class="btn success" id="confirmDepositBtn">Confirm & Submit</button>
+    </div>
+  </div>
+</div>
+
+<!-- MR Receipt Modal -->
+<div class="modalWrap" id="modalMRReceipt">
+  <div class="modal" style="max-width:900px;">
+    <div class="modalHead">
+      <div>
+        <h2>Money Receipt</h2>
+        <p id="mrReceiptSub">Deposit Receipt Details</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+    
+    <div id="mrReceiptBody" class="printArea"></div>
+    
+    <div class="hr"></div>
+    
+    <div class="row row-3">
+      <button class="btn">Close</button>
+      <button class="btn primary" id="printReceiptBtn">Print Receipt</button>
+      <button class="btn success" id="downloadReceiptBtn">Download PDF</button>
+    </div>
+  </div>
+</div>
+
+<!-- Company Vision & Mission Tab -->
+<div class="modalWrap" id="modalCompanyInfo">
+  <div class="modal">
+    <div class="modalHead">
+      <div>
+        <h2>Company Vision & Mission</h2>
+        <p>Our company goals and objectives</p>
+      </div>
+      <button class="closeX">✕</button>
+    </div>
+    
+    <div class="companyMission">
+      <h3>Our Vision</h3>
+      <p>To become the leading investment management company in the region, providing innovative financial solutions and creating sustainable value for our members and stakeholders through transparent operations and ethical business practices.</p>
+      
+      <h3 style="margin-top:20px;">Our Mission</h3>
+      <p>1. To provide secure and profitable investment opportunities for our members</p>
+      <p>2. To maintain 100% transparency in all financial transactions</p>
+      <p>3. To ensure timely profit distribution to all shareholders</p>
+      <p>4. To foster long-term relationships with members through excellent service</p>
+      <p>5. To contribute to economic growth through responsible investments</p>
+      
+      <h3 style="margin-top:20px;">Core Values</h3>
+      <p>• Transparency & Accountability</p>
+      <p>• Member Satisfaction</p>
+      <p>• Financial Integrity</p>
+      <p>• Innovation & Growth</p>
+      <p>• Social Responsibility</p>
+    </div>
+    
+    <div class="hr"></div>
+    
+    <div class="row">
+      <button class="btn">Close</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
