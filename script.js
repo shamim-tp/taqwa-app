@@ -277,36 +277,11 @@ function seedDB() {
     },
  // এডমিনদের অ্যারে
 const admins = [
-     { id: "ADM-001", name: "Super Admin", role: "SUPER_ADMIN", pass: "123", active: true, createdAt: nowISO() },
+     { id: "admin", name: "Super Admin", role: "SUPER_ADMIN", pass: "123", active: true, createdAt: nowISO() },
      { id: "ADM-002", name: "Finance Admin", role: "FINANCE_ADMIN", pass: "123", active: true, createdAt: nowISO() },
      { id: "ADM-003", name: "Accounts Admin", role: "ACCOUNTS_ADMIN", pass: "123", active: true, createdAt: nowISO() },
    ];
 
-// ভেরিফিকেশন ফাংশন
-function verifyAdmin(id, password) {
-   // ইউজার ইনপুটকৃত আইডি এবং পাসওয়ার্ড ট্রিম (অতিরিক্ত স্পেস দূর) করে এবং আইডি কে বড় হাতের অক্ষরে রূপান্তর (যদি প্রয়োজন হয়)
-   const cleanId = id.trim().toUpperCase();
-   const cleanPassword = password.trim();
-
-   // অ্যারে থেকে ম্যাচ খুঁজে বের করা
-   const admin = admins.find(admin => 
-       admin.id === cleanId && 
-       admin.pass === cleanPassword &&
-       admin.active === true
-   );
-
-   return admin; // যদি মিলে যায় তবে এডমিন অবজেক্ট রিটার্ন করবে, না হলে undefined
-}
-
-// ব্যবহার:
-const inputId = "ADM-001";
-const inputPass = "123";
-const result = verifyAdmin(inputId, inputPass);
-if (result) {
-   console.log("লগইন সফল!");
-} else {
-   console.log("আইডি বা পাসওয়ার্ড ভুল।");
-}
     members: [
       {
         id: "FM-001",
